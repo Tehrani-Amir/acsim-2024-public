@@ -43,14 +43,15 @@ print("Press Esc to exit...")
 
 while sim_time < end_time:
     # -------vary states to check viewer-------------
+    #coeffs=[10,10,10,0.1,0.1,0.1]
     if motions_time < time_per_motion:
-        state.north += 10*SIM.ts_simulation
+        state.north += 50*SIM.ts_simulation
     elif motions_time < time_per_motion*2:
-        state.east += 10*SIM.ts_simulation
+        state.east += 50*SIM.ts_simulation
     elif motions_time < time_per_motion*3:
-        state.altitude += 10*SIM.ts_simulation
+        state.altitude += 50*SIM.ts_simulation
     elif motions_time < time_per_motion*4:
-        state.psi += 0.1*SIM.ts_simulation
+        state.psi += 0.5*SIM.ts_simulation
     elif motions_time < time_per_motion*5:
         state.theta += 0.1*SIM.ts_simulation
     else:

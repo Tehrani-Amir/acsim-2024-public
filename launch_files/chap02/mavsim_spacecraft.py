@@ -16,6 +16,7 @@ sys.path.insert(0,os.fspath(Path(__file__).parents[2]))
 import pyqtgraph as pg
 import parameters.simulation_parameters as SIM
 from viewers.spacecraft_viewer import SpaceCraftViewer
+
 from message_types.msg_state import MsgState
 
 #quitter = QuitListener()
