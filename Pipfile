@@ -11,6 +11,8 @@ pyqtgraph = "*"
 pyqt6 = "*"
 pyopengl = "*"
 pynput = "*"
+opencv-python = "*"
+Pillow = "*"
 
 [dev-packages]
 
