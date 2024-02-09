@@ -20,7 +20,7 @@ from viewers.mav_viewer import MavViewer
 from message_types.msg_state import MsgState
 
 #quitter = QuitListener()
-VIDEO = True
+VIDEO = False
 if VIDEO is True:
     from viewers.video_writer import VideoWriter
     video = VideoWriter(video_name="chap2_video.avi",
