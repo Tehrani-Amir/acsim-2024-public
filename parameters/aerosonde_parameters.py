@@ -4,19 +4,20 @@ from tools.rotations import euler_to_quaternion
 ######################################################################################
                 #   Initial Conditions
 ######################################################################################
-#   Initial conditions for MAV
-north0 = 0.  # initial north position
-east0 = 0.  # initial east position
+# Define the Initial conditions for MAV
+north0 = 0.     # initial north position
+east0 = 0.      # initial east position
 down0 = -100.0  # initial down position
-u0 = 25.  # initial velocity along body x-axis
-v0 = 0.  # initial velocity along body y-axis
-w0 = 0.  # initial velocity along body z-axis
-phi0 = 0.  # initial roll angle
-theta0 = 0.  # initial pitch angle
-psi0 = 0.0  # initial yaw angle
-p0 = 0  # initial roll rate
-q0 = 0  # initial pitch rate
-r0 = 0  # initial yaw rate
+u0 = 25.        # initial velocity along body x-axis
+v0 = 0.         # initial velocity along body y-axis
+w0 = 0.         # initial velocity along body z-axis
+phi0 = 0.       # initial roll angle
+theta0 = 0.     # initial pitch angle
+psi0 = 0.0      # initial yaw angle
+p0 = 0          # initial roll rate
+q0 = 0          # initial pitch rate
+r0 = 0.5        # initial yaw rate
+
 Va0 = np.sqrt(u0**2+v0**2+w0**2) #initial airspeed
 
 #   Quaternion State
@@ -26,23 +27,22 @@ e1 = e.item(1)
 e2 = e.item(2)
 e3 = e.item(3)
 
-
 ######################################################################################
                 #   Physical Parameters
 ######################################################################################
-mass = 11. #kg
-Jx = 0.8244 #kg m^2
-Jy = 1.135
-Jz = 1.759
-Jxz = 0.1204
-S_wing = 0.55
-b = 2.8956
-c = 0.18994
-S_prop = 0.2027
-rho = 1.2682
-e = 0.9
-AR = (b**2) / S_wing
-gravity = 9.81
+mass = 11.              # mass (kg)
+Jx = 0.8244             # Inertia (kg.m^2)
+Jy = 1.135              
+Jz = 1.759              
+Jxz = 0.1204            
+S_wing = 0.55           # wing area
+b = 2.8956              # wing span
+c = 0.18994             # the mean chord of MAV
+S_prop = 0.2027         # 
+rho = 1.2682            # density
+e = 0.9                 # Oswald efficiency factor
+AR = (b**2) / S_wing    # wing aspect ratio
+gravity = 9.81          # gravitional acceleration
 
 ######################################################################################
                 #   Longitudinal Coefficients
@@ -63,7 +63,6 @@ M = 50.0
 alpha0 = 0.47
 epsilon = 0.16
 C_D_p = 0.0
-
 
 ######################################################################################
                 #   Lateral Coefficients
@@ -91,19 +90,18 @@ C_n_delta_r = -0.069
                 #   Propeller thrust / torque parameters (see addendum by McLain)
 ######################################################################################
 # Prop parameters
-D_prop = 20*(0.0254)     # prop diameter in m
+D_prop = 20*(0.0254)                              # prop diameter in m
 
 # Motor parameters
 KV_rpm_per_volt = 145.                            # Motor speed constant from datasheet in RPM/V
 KV = (1. / KV_rpm_per_volt) * 60. / (2. * np.pi)  # Back-emf constant, KV in V-s/rad
 KQ = KV                                           # Motor torque constant, KQ in N-m/A
-R_motor = 0.042              # ohms
-i0 = 1.5                     # no-load (zero-torque) current (A)
-
+R_motor = 0.042                                   # ohms
+i0 = 1.5                                          # no-load (zero-torque) current (A)
 
 # Inputs
 ncells = 12.
-V_max = 3.7 * ncells  # max voltage for specified number of battery cells
+V_max = 3.7 * ncells                              # max voltage for specified number of battery cells
 
 # Coeffiecients from prop_data fit
 C_Q2 = -0.01664

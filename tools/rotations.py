@@ -47,16 +47,21 @@ def euler_to_rotation(phi, theta, psi):
     s_theta = np.sin(theta)
     c_psi = np.cos(psi)
     s_psi = np.sin(psi)
-
-    R_roll = np.array([[1, 0, 0],
+    
+    # Define Rotation Matrices from Body to Inertial
+    R_roll = np.array([[1.0, 0, 0],
                        [0, c_phi, -s_phi],
                        [0, s_phi, c_phi]])
+    
     R_pitch = np.array([[c_theta, 0, s_theta],
-                        [0, 1, 0],
+                        [0, 1.0, 0],
                         [-s_theta, 0, c_theta]])
+    
     R_yaw = np.array([[c_psi, -s_psi, 0],
                       [s_psi, c_psi, 0],
-                      [0, 0, 1]])
+                      [0, 0, 1.0]])
+    
+    # Define the Rotation Matrix, from Body to Inertial
     #R = np.dot(R_yaw, np.dot(R_pitch, R_roll))
     R = R_yaw @ R_pitch @ R_roll
 

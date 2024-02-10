@@ -135,8 +135,7 @@ class DataViewer:
         self._plotter.create_data_set(plot_id="delta_a", data_label="delta_a", data_color=control_color)
         self._plotter.create_data_set(plot_id="delta_r", data_label="delta_r", data_color=control_color)
         self._plotter.create_data_set(plot_id="delta_t", data_label="delta_t", data_color=control_color)
-        
-        
+                
         # define sixth row
         self._plotter.create_plot_widget(plot_id='u', xlabel='Time (s)', ylabel='u (m/s)',
                                        window_length=self._data_window_length)
@@ -172,6 +171,7 @@ class DataViewer:
             self._plotter.add_data_point(plot_id='phi', data_label='phi_c', xvalue=t, yvalue=self.__rad_to_deg(commanded_state.phi))
             self._plotter.add_data_point(plot_id='theta', data_label='theta_c', xvalue=t, yvalue=self.__rad_to_deg(commanded_state.theta))
             self._plotter.add_data_point(plot_id='chi', data_label='chi_c', xvalue=t, yvalue=self.__rad_to_deg(commanded_state.chi))
+            
         #add the true state data
         if true_state != None:
             self._plotter.add_data_point(plot_id='pn', data_label='pn', xvalue=t, yvalue=true_state.north)
@@ -194,6 +194,7 @@ class DataViewer:
             self._plotter.add_data_point(plot_id='bias', data_label='by', xvalue=t, yvalue=self.__rad_to_deg(true_state.by))
             self._plotter.add_data_point(plot_id='bias', data_label='bz', xvalue=t, yvalue=self.__rad_to_deg(true_state.bz))
             
+            # update the newly defined plot for sixth row ([u,v,w])
             self._plotter.add_data_point(plot_id='u', data_label='u', xvalue=t, yvalue=true_state.u)
             self._plotter.add_data_point(plot_id='v', data_label='v', xvalue=t, yvalue=true_state.v)
             self._plotter.add_data_point(plot_id='w', data_label='w', xvalue=t, yvalue=true_state.w)
@@ -241,5 +242,3 @@ class DataViewer:
     def __rad_to_deg(self, radians):
         rad = wrap(radians,0)
         return rad*180/np.pi
-
-

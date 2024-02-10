@@ -11,7 +11,6 @@ import pyqtgraph.opengl as gl
 from tools.rotations import euler_to_rotation
 from tools.drawing import rotate_points, translate_points, points_to_mesh
 
-
 class DrawMav:
     def __init__(self, state, window, scale=10):
         """
@@ -28,10 +27,13 @@ class DrawMav:
         """
         self.unit_length = scale
         sc_position = np.array([[state.north], [state.east], [-state.altitude]])  # NED coordinates
+        
         # attitude of mav as a rotation matrix R from body to inertial
         R_bi = euler_to_rotation(state.phi, state.theta, state.psi)
+        
         # convert North-East Down to East-North-Up for rendering
         self.R_ned = np.array([[0, 1, 0], [1, 0, 0], [0, 0, -1]])
+        
         # get points that define the non-rotated, non-translated spacecraft and the mesh colors
         self.sc_points, self.sc_index, self.sc_meshColors = self.get_sc_points()
         self.sc_body = self.add_object(
@@ -83,6 +85,7 @@ class DrawMav:
             Define the points on the spacecraft following information in Appendix C.3
         """
         
+        # Define the MAV parameters and Geometry
         Scale = 5
         
         wing_l= Scale* 0.3
@@ -99,7 +102,7 @@ class DrawMav:
         tail_h= Scale* 0.4
         
         # points are in XYZ coordinates
-        #   define the points on the spacecraft according to Appendix C.3
+        # define the points on the spacecraft according to Appendix C.3
         points = self.unit_length * np.array([
 
             [fuse_l1, 0, 0],  # point 1 [0]

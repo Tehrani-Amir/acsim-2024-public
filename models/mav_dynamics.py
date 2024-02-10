@@ -156,7 +156,6 @@ class MavDynamics:
                     ]
                 ]
             ).T
-        # x_dot = np.array([[0,0,0,0,0,0,0,0,0,0,0,0,0]]).T
         
         return x_dot
 
@@ -172,24 +171,30 @@ class MavDynamics:
         self.true_state.v = self._state.item(4)
         self.true_state.w = self._state.item(5)
 
-        self.true_state.Va = 0
-        self.true_state.alpha = 0
-        self.true_state.beta = 0
+        self.true_state.Va = 0      # airspeed
+        self.true_state.alpha = 0   # angle of attack
+        self.true_state.beta = 0    # sideslipe angle
+        
         self.true_state.phi = phi
         self.true_state.theta = theta
         self.true_state.psi = psi
         
-        self.true_state.Vg = np.sqrt(self._state.item(3)**2 + self._state.item(4)**2 + self._state.item(5)**2 ) 
+        # update the ground velocity
+        self.true_state.Vg = np.sqrt(self._state.item(3)**2.0 + self._state.item(4)**2.0 + self._state.item(5)**2.0 ) 
         
         self.true_state.gamma = 0
         self.true_state.chi = 0
+        
         self.true_state.p = self._state.item(10)
         self.true_state.q = self._state.item(11)
         self.true_state.r = self._state.item(12)
+        
         self.true_state.wn = 0
         self.true_state.we = 0
+        
         self.true_state.bx = 0
         self.true_state.by = 0
         self.true_state.bz = 0
+        
         self.true_state.camera_az = 0
         self.true_state.camera_el = 0
