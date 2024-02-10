@@ -79,6 +79,7 @@ class MavDynamics:
         e2 = self._state.item(8)
         e3 = self._state.item(9)
         normE = np.sqrt(e0**2+e1**2+e2**2+e3**2)
+        
         self._state[6][0] = self._state.item(6)/normE
         self._state[7][0] = self._state.item(7)/normE
         self._state[8][0] = self._state.item(8)/normE
@@ -132,9 +133,9 @@ class MavDynamics:
         e3_dot = 0.5*(r*e0+q*e1-p*e2)
 
         # rotatonal dynamics
-        p_dot = 0
-        q_dot=0
-        r_dot=0
+        p_dot = MAV.gamma1*p*q - MAV.gamma2*q*r + MAV.gamma3*l + MAV.gamma4*m
+        q_dot = MAV.gamma5*p*r - MAV.gamma6*(p**2-r**2) + m/MAV.Jy
+        r_dot = MAV.gamma7*p*q - MAV.gamma1*q*r + MAV.gamma4*l + MAV.gamma8*n
 
         # collect the derivative of the states
         x_dot = np.array(

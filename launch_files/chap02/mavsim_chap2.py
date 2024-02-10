@@ -13,19 +13,20 @@ import os, sys
 from pathlib import Path
 sys.path.insert(0,os.fspath(Path(__file__).parents[2]))
 # use QuitListener for Linux or PC <- doesn't work on Mac
-#from python_tools.quit_listener import QuitListener
+# from python_tools.quit_listener import QuitListener
 import pyqtgraph as pg
 import parameters.simulation_parameters as SIM
 from viewers.mav_viewer import MavViewer
 from message_types.msg_state import MsgState
 
-#quitter = QuitListener()
+# quitter = QuitListener()
 VIDEO = False
 if VIDEO is True:
     from viewers.video_writer import VideoWriter
     video = VideoWriter(video_name="chap2_video.avi",
                         bounding_box=(0, 0, 1000, 1000),
                         output_rate=SIM.ts_video)
+
 # initialize the visualization
 app = pg.QtWidgets.QApplication([])
 mav_view = MavViewer(app=app)  # initialize the mav viewer
@@ -43,19 +44,25 @@ print("Press Esc to exit...")
 
 while sim_time < end_time:
     # -------vary states to check viewer-------------
-    #coeffs=[10,10,10,0.1,0.1,0.1]
+    # coeffs=[10,10,10,0.1,0.1,0.1]
     if motions_time < time_per_motion:
         state.north += 50*SIM.ts_simulation
+        
     elif motions_time < time_per_motion*2:
         state.east += 50*SIM.ts_simulation
+        
     elif motions_time < time_per_motion*3:
         state.altitude += 50*SIM.ts_simulation
+        
     elif motions_time < time_per_motion*4:
         state.psi += 0.5*SIM.ts_simulation
+        
     elif motions_time < time_per_motion*5:
         state.theta += 0.1*SIM.ts_simulation
+        
     else:
-        state.phi += 0.1*SIM.ts_simulation
+        state.phi += -0.1*SIM.ts_simulation
+        
     # -------update viewer and video-------------
     mav_view.update(state)
     mav_view.process_app()
@@ -72,7 +79,7 @@ while sim_time < end_time:
     
     # # -------Check to Quit the Loop-------
     # if quitter.check_quit():
-    #     break
+    # break
 
 if VIDEO is True:
     video.update(sim_time)
