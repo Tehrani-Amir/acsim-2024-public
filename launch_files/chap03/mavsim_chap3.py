@@ -58,8 +58,8 @@ while sim_time < end_time:
     # ------- vary forces and moments to check dynamics -------------
     fx = 0  # 10
     fy = 0  # 10
-    fz = 100  # 10
-    Mx = 0.1  # 0.1
+    fz = 0  # 10
+    Mx = 0  # 0.1
     My = 0  # 0.1
     Mz = 0  # 0.1
     forces_moments = np.array([[fx, fy, fz, Mx, My, Mz]]).T
