@@ -139,16 +139,16 @@ gamma6 = Jxz / Jy
 gamma7 = ((Jx - Jy) * Jx + (Jxz**2)) / gamma
 gamma8 = Jx / gamma
 
-#   C values defines on pag 62
-C_p_0         = gamma3 * C_ell_0      + gamma4 * C_n_0
-C_p_beta      = gamma3 * C_ell_beta   + gamma4 * C_n_beta
-C_p_p         = gamma3 * C_ell_p      + gamma4 * C_n_p
-C_p_r         = gamma3 * C_ell_r      + gamma4 * C_n_r
-C_p_delta_a    = gamma3 * C_ell_delta_a + gamma4 * C_n_delta_a
-C_p_delta_r    = gamma3 * C_ell_delta_r + gamma4 * C_n_delta_r
-C_r_0         = gamma4 * C_ell_0      + gamma8 * C_n_0
-C_r_beta      = gamma4 * C_ell_beta   + gamma8 * C_n_beta
-C_r_p         = gamma4 * C_ell_p      + gamma8 * C_n_p
-C_r_r         = gamma4 * C_ell_r      + gamma8 * C_n_r
-C_r_delta_a    = gamma4 * C_ell_delta_a + gamma8 * C_n_delta_a
-C_r_delta_r    = gamma4 * C_ell_delta_r + gamma8 * C_n_delta_r
+# C values defines on pag 62
+C_p_0         = gamma3 * C_ell_0       + gamma4 * C_n_0
+C_p_beta      = gamma3 * C_ell_beta    + gamma4 * C_n_beta
+C_p_p         = gamma3 * C_ell_p       + gamma4 * C_n_p
+C_p_r         = gamma3 * C_ell_r       + gamma4 * C_n_r
+C_p_delta_a   = gamma3 * C_ell_delta_a + gamma4 * C_n_delta_a
+C_p_delta_r   = gamma3 * C_ell_delta_r + gamma4 * C_n_delta_r
+C_r_0         = gamma4 * C_ell_0       + gamma8 * C_n_0
+C_r_beta      = gamma4 * C_ell_beta    + gamma8 * C_n_beta
+C_r_p         = gamma4 * C_ell_p       + gamma8 * C_n_p
+C_r_r         = gamma4 * C_ell_r       + gamma8 * C_n_r
+C_r_delta_a   = gamma4 * C_ell_delta_a + gamma8 * C_n_delta_a
+C_r_delta_r   = gamma4 * C_ell_delta_r + gamma8 * C_n_delta_r
