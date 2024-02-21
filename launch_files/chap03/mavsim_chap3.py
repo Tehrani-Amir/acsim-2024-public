@@ -57,8 +57,8 @@ print("Press 'Esc' to exit...")
 while sim_time < end_time:
     
     # ------- vary forces and moments to check dynamics -------------
-    fx = 10       # 10
-    fy = 10       # 10
+    fx = 0        # 10
+    fy = 0        # 10
     fz = 0        # 10
     Mx = 0        # 0.1
     My = 0        # 0.1

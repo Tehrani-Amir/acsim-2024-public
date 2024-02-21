@@ -111,19 +111,19 @@ class MavDynamics:
         fx = forces_moments.item(0)
         fy = forces_moments.item(1)
         fz = forces_moments.item(2)
-        l = forces_moments.item(3)
-        m = forces_moments.item(4)
-        n = forces_moments.item(5)
+        l = forces_moments.item(3)  # Mx
+        m = forces_moments.item(4)  # My
+        n = forces_moments.item(5)  # Mz
 
         # Position Kinematics
-        north_dot = u*(e1**2+e0**2-e2**2-e3**2) + v*2*(e1*e2-e3*e0)  +w*2*(e1*e3+e2*e0)
-        east_dot = u*2*(e1*e2+e3*e0) + v*2*(e2**2+e0**2-e1**2-e3**2) + w*2*(e2*e3-e0*e1)
-        down_dot = u*2*(e1*e3-e0*e2) + v*2*(e2*e3-+e0*e1) + w*(e3**2+e0**2-e1**2-e2**2)
+        north_dot = u*(e1**2 + e0**2 - e2**2 - e3**2) + v*2*(e1*e2 - e3*e0) + w*2*(e1*e3 + e2*e0)
+        east_dot = u*2*(e1*e2 + e3*e0) + v*2*(e2**2 + e0**2 - e1**2 - e3**2) + w*2*(e2*e3 - e0*e1)
+        down_dot = u*2*(e1*e3 - e0*e2) + v*2*(e2*e3 + e0*e1) + w*(e3**2 + e0**2 - e1**2 - e2**2)
         
         # Position Dynamics
-        u_dot = (r*v-q*w) + fx/MAV.mass
-        v_dot = (p*w-r*u) + fy/MAV.mass
-        w_dot = (q*u-p*v) + fz/MAV.mass
+        u_dot = (r*v - q*w) + fx/MAV.mass
+        v_dot = (p*w - r*u) + fy/MAV.mass
+        w_dot = (q*u - p*v) + fz/MAV.mass
 
         # rotational kinematics
         e0_dot = 0.5*(-p*e1 - q*e2 - r*e3)
@@ -132,10 +132,10 @@ class MavDynamics:
         e3_dot = 0.5*(r*e0 + q*e1 - p*e2)
 
         # rotatonal dynamics
-        p_dot = MAV.gamma1*p*q - MAV.gamma2*q*r + MAV.gamma3*l + MAV.gamma4*m
-        q_dot = MAV.gamma5*p*r - MAV.gamma6*(p**2-r**2) + m/MAV.Jy
-        r_dot = MAV.gamma7*p*q - MAV.gamma1*q*r + MAV.gamma4*l + MAV.gamma8*n
-
+        p_dot = (MAV.gamma1*p*q-MAV.gamma2*q*r) + (MAV.gamma3*l+MAV.gamma4*n)
+        q_dot = (MAV.gamma5*p*r-MAV.gamma6*(p**2 - r**2)) + ((1/MAV.Jy) * m)
+        r_dot = (MAV.gamma7*p*q - MAV.gamma1*q*r) + (MAV.gamma4*l + MAV.gamma8*n)
+        
         # collect the derivative of the states
         x_dot = np.array(
             [
@@ -171,6 +171,7 @@ class MavDynamics:
         self.true_state.w = self._state.item(5)
 
         phi, theta, psi = quaternion_to_euler(self._state[6:10])
+        
         self.true_state.phi = phi
         self.true_state.theta = theta
         self.true_state.psi = psi

@@ -74,7 +74,8 @@ if __name__ == "__main__":
     den = np.array([[1, 4, 5, 6]])
     #num = np.array([[1, 6, 11, 6]])
     #den = np.array([[1, 3.5, 5, 3]])
-    system = transferFunction(num, den, Ts)
+    
+    system = TransferFunction(num, den, Ts)
 
     # main simulation loop
     sim_time = 0.0
@@ -91,5 +92,4 @@ if __name__ == "__main__":
     # plot output vs time
     plt.plot(time, output)
     plt.show()
-
 

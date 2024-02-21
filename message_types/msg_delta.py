@@ -10,7 +10,6 @@ part of mavsim
 """
 import numpy as np
 
-
 class MsgDelta:
     def __init__(self,
                  elevator=0.0,
@@ -50,4 +49,3 @@ class MsgDelta:
               'throttle=', self.throttle,
               'azimuth_cmd=', self.gimbal_az,
               'elevation_cmd=', self.gimbal_el)
-
