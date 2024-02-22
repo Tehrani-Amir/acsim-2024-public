@@ -9,16 +9,37 @@ import numpy as np
 
 class WindSimulation:
     def __init__(self, Ts, gust_flag = True, steady_state = np.array([[0., 0., 0.]]).T):
+        
         # steady state wind defined in the inertial frame
         self._steady_state = steady_state
         ##### TODO #####
 
-        #   Dryden gust model parameters (pg 56 UAV book)
+        # Dryden gust model parameters (pg 56 UAV book) 
+        # these Based on Table 4.1 for low altitude & light turbulence        
+        Lu = 200
+        Lv = 200
+        Lw = 50
+        
+        delta_u = 1.06
+        delta_v = 1.06
+        delta_w = 0.7
 
         # Dryden transfer functions (section 4.4 UAV book) - Fill in proper num and den
-        self.u_w = TransferFunction(num=np.array([[0]]), den=np.array([[1,1]]),Ts=Ts)
-        self.v_w = TransferFunction(num=np.array([[0,0]]), den=np.array([[1,1,1]]),Ts=Ts)
-        self.w_w = TransferFunction(num=np.array([[0,0]]), den=np.array([[1,1,1]]),Ts=Ts)
+                        
+        # PLEASE REPLACE the CORRECT Value of Va
+        Va = 25
+        
+        Hu = delta_u*np.sqrt((2*Va)/(Lu))
+        Hv = delta_v*np.sqrt((3*Va)/Lv)
+        Hw = delta_w*np.sqrt((3*Va)/Lw)
+        
+        # example of encoding system into num and den
+        # Considering the system = (s + 2) / (s^3 + 4s^2 + 5s + 6)
+        # num = np.array([[1, 2]]) and den = np.array([[1, 4, 5, 6]])
+
+        self.u_w = TransferFunction(num=np.array([[Hu]]), den=np.array([[1, (Va/Lu)]]),Ts=Ts)
+        self.v_w = TransferFunction(num=np.array([[Hv, Va/(np.sqrt(3)*Lv)]]), den=np.array([[1, (2*Va/Lv), (Va/Lv)**2]]), Ts=Ts)
+        self.w_w = TransferFunction(num=np.array([[Hw, Va/(np.sqrt(3)*Lw)]]), den=np.array([[1, (2*Va/Lw), (Va/Lw)**2]]), Ts=Ts)
         self._Ts = Ts
 
     def update(self):

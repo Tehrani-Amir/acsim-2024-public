@@ -34,6 +34,7 @@ class MsgState:
         
         self.wn = 0.            # inertial windspeed in north direction in meters/sec
         self.we = 0.            # inertial windspeed in east direction in meters/sec
+        # why we don't have wd
         
         self.bx = 0.            # gyro bias along roll axis in radians/sec
         self.by = 0.            # gyro bias along pitch axis in radians/sec
@@ -41,3 +42,7 @@ class MsgState:
         
         self.camera_az = 0.     # camera azimuth angle
         self.camera_el = np.radians(-90)  # camera elevation angle
+        
+        self.u = 0.0
+        self.v = 0.0
+        self.w = 0.0
