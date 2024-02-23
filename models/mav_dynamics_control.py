@@ -163,12 +163,12 @@ class MavDynamics(MavDynamicsForces):
         b = MAV.rho * (MAV.D_prop**4) * MAV.C_Q1 * (self._Va) / (2*np.pi)
         c = MAV.rho * (MAV.D_prop**3) * MAV.C_Q2 * (self._Va)**2 + MAV.KQ * (- v_in /MAV.R_motor + MAV.i0)
         
-        # Propeller Spped (rad/sec)
+        # Propeller Speed (rad/sec) - Operating Propeller Speed
         Omega_p = (-b + np.sqrt(b**2-4*a*c))/(2*a)
         
-        # n = Omega_p/(2*np.pi) is propeller speed (rev/sec)
+        # n = Omega_p/(2*np.pi) is propeller speed (revolutions/sec)
         
-        # the associated advanced ration 
+        # the associated advanced ration (op means operating)
         J_op = (2*np.pi * self._Va) / (Omega_p*MAV.D_prop)
         
         # thrust and torque due to propeller

@@ -22,6 +22,8 @@ from viewers.mav_viewer import MavViewer
 from viewers.data_viewer import DataViewer
 from message_types.msg_delta import MsgDelta
 
+import keyboard
+
 #quitter = QuitListener()
 
 VIDEO = False
@@ -57,12 +59,37 @@ end_time = 60
 
 # main simulation loop
 print("Press 'Esc' to exit...")
+
 while sim_time < end_time:
     # ------- set control surfaces -------------
-    delta.elevator = -0.1248
-    delta.aileron = 0.001836
-    delta.rudder = -0.0003026
-    delta.throttle = 0.6768
+    
+    # Define the function to update control surfaces based on keyboard input
+    
+    # Adjust control surfaces based on keyboard input
+    if keyboard.is_pressed('up'):
+        delta.elevator += 0.01
+    elif keyboard.is_pressed('down'):
+        delta.elevator -= 0.01
+        
+    if keyboard.is_pressed('right'):
+        delta.aileron += 0.01
+    elif keyboard.is_pressed('left'):
+        delta.aileron -= 0.01
+        
+    if keyboard.is_pressed('d'):
+        delta.rudder += 0.01
+    elif keyboard.is_pressed('a'):
+        delta.rudder -= 0.01
+        
+    if keyboard.is_pressed('w'):
+        delta.throttle += 0.01
+    elif keyboard.is_pressed('s'):
+        delta.throttle -= 0.01
+    
+    # delta.elevator = 0               # -0.1248
+    # delta.aileron = 0                # 0.001836
+    # delta.rudder = 0                 # -0.0003026
+    # delta.throttle = 0               # 0.6768
 
     # ------- physical system -------------
     current_wind = wind.update()  # get the new wind vector

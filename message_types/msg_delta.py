@@ -18,11 +18,12 @@ class MsgDelta:
                  throttle=0.5,
                  azimuth_cmd=0.0,
                  elevation_cmd=0.0):
+        
         self.elevator = elevator  # elevator command
-        self.aileron = aileron  # aileron command
-        self.rudder = rudder  # rudder command
+        self.aileron = aileron    # aileron command
+        self.rudder = rudder      # rudder command
         self.throttle = throttle  # throttle command
-        self.gimbal_az = azimuth_cmd  # azimuth command for gimbal
+        self.gimbal_az = azimuth_cmd    # azimuth command for gimbal
         self.gimbal_el = elevation_cmd  # elevation command for gimbal
 
     def to_array(self):
@@ -41,7 +42,7 @@ class MsgDelta:
         self.throttle = u.item(3)
         self.gimbal_az = u.item(4)
         self.gimbal_el = u.item(5)
-
+        
     def print(self):
         print('elevator=', self.elevator,
               'aileron=', self.aileron,
