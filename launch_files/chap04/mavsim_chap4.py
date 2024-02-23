@@ -23,7 +23,6 @@ from viewers.data_viewer import DataViewer
 from message_types.msg_delta import MsgDelta
 
 import keyboard
-import pyglet
 
 #quitter = QuitListener()
 
@@ -72,14 +71,14 @@ while sim_time < end_time:
     elif keyboard.is_pressed('down'):
         delta.elevator -= 0.01
         
-    if keyboard.is_pressed('left'):
-        delta.aileron -= 0.01
-    elif keyboard.is_pressed('right'):
+    if keyboard.is_pressed('right'):
         delta.aileron += 0.01
+    elif keyboard.is_pressed('left'):
+        delta.aileron -= 0.01
         
-    if keyboard.is_pressed('a'):
+    if keyboard.is_pressed('d'):
         delta.rudder += 0.01
-    elif keyboard.is_pressed('d'):
+    elif keyboard.is_pressed('a'):
         delta.rudder -= 0.01
         
     if keyboard.is_pressed('w'):
