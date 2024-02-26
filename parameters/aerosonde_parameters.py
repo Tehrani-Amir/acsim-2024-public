@@ -70,7 +70,7 @@ M = 50.0
 alpha0 = 0.47           # 0.4712
 
 epsilon = 0.16          # 0.1592
-C_D_p = 0.0
+C_D_p = 0.0             #0.043
 
 ######################################################################################
                 #   Lateral Coefficients
@@ -104,6 +104,10 @@ C_n_delta_r = -0.069    # -0.032
 ######################################################################################
 # Prop parameters
 D_prop = 20*(0.0254)                              # prop diameter in m
+C_prop = 1.0                                      # Aerodynamic coefficient for the propeller
+k_motor = 80                                      # Constant that specifies the efficiency of the motor
+k_T_p = 0                                         # Constant determined by the experiment
+K_omega = 0                                       # Constant
 
 # Motor parameters
 KV_rpm_per_volt = 145.                            # Motor speed constant from datasheet in RPM/V

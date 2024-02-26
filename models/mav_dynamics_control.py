@@ -104,8 +104,13 @@ class MavDynamics(MavDynamicsForces):
         q = self._state.item(11)
         r = self._state.item(12)
         
+        # Chnaged in the class
+        # p = self._state[10,0]
+        # q = self._state[11,0]
+        # r = self._state[12,0]
+        
         # compute gravitational forces ([fg_x, fg_y, fg_z])
-        fg_i = [[0],[0], [MAV.mass * MAV.gravity]]
+        fg_i = [[0], [0], [MAV.mass * MAV.gravity]]
         fg_b = np.matmul(Ri_b, fg_i)
  
         # compute Lift and Drag coefficients (CL, CD)
@@ -130,24 +135,48 @@ class MavDynamics(MavDynamicsForces):
         F_lift = q_bar * (CL + MAV.C_L_delta_e * delta_e + MAV.C_L_q * MAV.c*q/(2*self._Va))
         F_drag = q_bar * (CD + MAV.C_D_delta_e * delta_e + MAV.C_D_q * MAV.c*q/(2*self._Va))
         
+        # compute Longitudinal forces in body frame (fx, fz)
+        fx_a = - np.cos(self._alpha)*F_drag + np.sin(self._alpha)*F_lift
+        fz_a = - np.sin(self._alpha)*F_drag - np.cos(self._alpha)*F_lift 
+        
+        # compute Lateral force in body frame (fy)
+        fy_a = q_bar * (MAV.C_Y_0 + MAV.C_Y_beta*self._beta + MAV.C_Y_p*MAV.b*p/(2*self._Va) + MAV.C_Y_r*MAV.b*r/(2*self._Va) + MAV.C_Y_delta_a*delta_a + MAV.C_Y_delta_r*delta_r)
+        
+        # compute aerodynamic forces in body frame
+        fa_b = [[fx_a], [fy_a], [fz_a]]
+        
+        # compute Logitudinal torque in body frame (My=m)
+        m = q_bar * MAV.c * (MAV.C_m_0 + MAV.C_m_alpha*self._alpha + MAV.C_m_q*MAV.c*q/(2*self._Va) + MAV.C_m_delta_e*delta_e)
+
+        # compute Lateral torques in body frame (Mx=l, Mz=n)
+        l = q_bar * MAV.b * (MAV.C_ell_0 + MAV.C_ell_beta*self._beta + MAV.C_ell_p*MAV.b*p/(2*self._Va) + MAV.C_ell_r*MAV.b*r/(self._Va) + MAV.C_ell_delta_a*delta_a + MAV.C_ell_delta_r*delta_r)
+        n = q_bar * MAV.b * (MAV.C_n_0 + MAV.C_n_beta*self._beta + MAV.C_n_p*MAV.b*p/(2*self._Va) + MAV.C_n_r*MAV.b*r/(self._Va) + MAV.C_n_delta_a*delta_a + MAV.C_n_delta_r*delta_r)
+        
+        # compute aerodynamic moments in body frame
+        ma_b = np.array([[l], [m], [n]])
+        
         # propeller thrust and torque
         thrust_prop, torque_prop = self._motor_thrust_torque(self._Va, delta.throttle)
         
-        # compute longitudinal forces in body frame (fx, fz)
-        fx = - np.cos(self._alpha)*F_drag + np.sin(self._alpha)*F_lift
-        fz = - np.sin(self._alpha)*F_drag - np.cos(self._alpha)*F_lift 
-
-        # compute lateral forces in body frame (fy)
-        fy = q_bar * (MAV.C_Y_0 + MAV.C_Y_beta*self._beta + MAV.C_Y_p*MAV.b*p/(2*self._Va) + MAV.C_Y_r*MAV.b*r/(2*self._Va) + MAV.C_Y_delta_a*delta_a + MAV.C_Y_delta_r*delta_r)
-
-        # compute logitudinal torque in body frame (My=m)
-        m = q_bar * (MAV.C_m_0 + MAV.C_m_alpha*self._alpha + MAV.C_m_q*MAV.c*q/(2*self._Va) + MAV.C_m_delta_e*delta_e)
-
-        # compute lateral torques in body frame (Mx=l, Mz=n)
-        l = q_bar * MAV.b * (MAV.C_ell_0 + MAV.C_ell_beta*self._beta + MAV.C_ell_p*MAV.b*p/(2*self._Va) + MAV.C_ell_r*MAV.b*r/(self._Va) + MAV.C_ell_delta_a*delta_a + MAV.C_ell_delta_r*delta_r)
-        n = q_bar * MAV.b * (MAV.C_n_0 + MAV.C_n_beta*self._beta + MAV.C_n_p*MAV.b*p/(2*self._Va) + MAV.C_n_r*MAV.b*r/(self._Va) + MAV.C_n_delta_a*delta_a + MAV.C_n_delta_r*delta_r)
-
-        forces_moments = np.array([[fx, fy, fz, l, m, n]]).T
+        fx_p = 0.5 * MAV.rho * MAV.S_prop * MAV.C_prop * ((MAV.k_motor * delta_t)**2 - self._Va**2)
+        f_prop = [[fx_p], [0], [0]]
+        
+        Tp = -MAV.k_T_p * (MAV.K_omega * delta_t)**2
+        m_prop = np.array([[Tp], [0], [0]])
+        
+        # compute total forces in body frame
+        f =  fg_b + fa_b + f_prop
+        fx = f[0][0]
+        fy = f[1][0]
+        fz = f[2][0]
+        
+        # compute total moments in body frame
+        Moments = ma_b + m_prop
+        Mx = Moments[0][0]
+        My = Moments[1][0]
+        Mz = Moments[2][0]
+         
+        forces_moments = np.array([[fx, fy, fz, Mx, My, Mz]]).T
         return forces_moments
 
     def _motor_thrust_torque(self, Va, delta_t):
