@@ -71,9 +71,9 @@ while sim_time < end_time:
     elif keyboard.is_pressed('down'):
         delta.elevator -= 0.01
         
-    if keyboard.is_pressed('right'):
+    if keyboard.is_pressed('left'):
         delta.aileron += 0.01
-    elif keyboard.is_pressed('left'):
+    elif keyboard.is_pressed('right'):
         delta.aileron -= 0.01
         
     if keyboard.is_pressed('d'):
@@ -85,6 +85,9 @@ while sim_time < end_time:
         delta.throttle += 0.01
     elif keyboard.is_pressed('s'):
         delta.throttle -= 0.01
+        
+    if keyboard.is_pressed('esc'):
+        break
     
     # delta.elevator = 0               # -0.1248
     # delta.aileron = 0                # 0.001836

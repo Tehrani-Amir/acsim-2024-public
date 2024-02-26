@@ -6,7 +6,6 @@ process to represent wind gusts. (Follows section 4.4 in uav book)
 from tools.transfer_function import TransferFunction
 import numpy as np
 
-
 class WindSimulation:
     def __init__(self, Ts, gust_flag = True, steady_state = np.array([[0., 0., 0.]]).T):
         
@@ -14,16 +13,40 @@ class WindSimulation:
         self._steady_state = steady_state
         ##### TODO #####
 
-        # Dryden gust model parameters (pg 56 UAV book) 
-        # these Based on Table 4.1 for low altitude & light turbulence        
-        Lu = 200
-        Lv = 200
-        Lw = 50
+        # Dryden gust model parameters (Based on Table 4.1-page 56 UAV book) 
+        # Check the altitude and Turbulence
         
-        delta_u = 1.06
-        delta_v = 1.06
-        delta_w = 0.7
+        Altitude = 200
+        Turbulence = "light"
 
+        if abs(Altitude)<600: # low altitude
+            Lu = 200
+            Lv = 200
+            Lw = 50
+            
+            if Turbulence == "light":      # light turbulence
+                delta_u = 1.06
+                delta_v = 1.06
+                delta_w = 0.7
+            
+            else:                          # moderate turbulence
+                delta_u = 1.06
+                delta_v = 1.06
+                delta_w = 0.7  
+        else:                              # medium altitude
+            Lu = 533
+            Lv = 533
+            Lw = 533
+            
+            if Turbulence == "light":     # light turbulence
+                delta_u = 1.5
+                delta_v = 1.5
+                delta_w = 1.5
+            else:                         # moderate turbulence
+                delta_u = 3.0
+                delta_v = 3.0
+                delta_w = 3.0
+                
         # Dryden transfer functions (section 4.4 UAV book) - Fill in proper num and den
                         
         # PLEASE REPLACE the CORRECT Value of Va
