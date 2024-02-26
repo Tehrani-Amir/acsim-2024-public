@@ -67,19 +67,19 @@ while sim_time < end_time:
     
     # Adjust control surfaces based on keyboard input
     if keyboard.is_pressed('up'):
-        delta.elevator += 0.01
+        delta.elevator += 0.005
     elif keyboard.is_pressed('down'):
-        delta.elevator -= 0.01
+        delta.elevator -= 0.005
         
-    if keyboard.is_pressed('left'):
-        delta.aileron += 0.01
-    elif keyboard.is_pressed('right'):
-        delta.aileron -= 0.01
+    if keyboard.is_pressed('right'):
+        delta.aileron += 0.005
+    elif keyboard.is_pressed('left'):
+        delta.aileron -= 0.005
         
     if keyboard.is_pressed('d'):
-        delta.rudder += 0.01
+        delta.rudder += 0.005
     elif keyboard.is_pressed('a'):
-        delta.rudder -= 0.01
+        delta.rudder -= 0.005
         
     if keyboard.is_pressed('w'):
         delta.throttle += 0.01
