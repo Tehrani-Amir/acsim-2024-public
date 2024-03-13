@@ -14,7 +14,7 @@ from models.mav_dynamics import MavDynamics as MavDynamicsForces
 from message_types.msg_state import MsgState
 from message_types.msg_delta import MsgDelta
 import parameters.aerosonde_parameters as MAV
-from tools.rotations import quaternion_to_rotation, quaternion_to_euler, euler_to_rotation
+from tools.rotations import quaternion_to_rotation, quaternion_to_euler, euler_to_rotation, euler_to_quaternion
 
 class MavDynamics(MavDynamicsForces):
     def __init__(self, Ts):
@@ -26,15 +26,44 @@ class MavDynamics(MavDynamicsForces):
         # store forces to avoid recalculation in the sensors function
         self._forces = np.array([[0.], [0.], [0.]])
         
-        self._Va = MAV.u0
-        self._alpha = 0
-        self._beta = 0
+        self.initialize_velocity(MAV.u0, 0., 0.)
+      
+    ## Initialize velocity Function
+    def initialize_velocity(self, Va, alpha, beta):
+        self._Va = Va
+        self._alpha = alpha
+        self._beta = beta
+        
+        # calculate airspeed components
+        self._state[3] = Va * np.cos(alpha) * np.cos(beta)
+        self._state[4] = Va * np.sin(beta)
+        self._state[5] = Va * np.sin(alpha) * np.cos(beta)
         
         # update velocity data and forces and moments
         self._update_velocity_data()
         self._forces_moments(delta=MsgDelta())
+        
         # update the message class for the true state
         self._update_true_state()
+
+
+    ## Objective Longitudinal Trim Function
+    def calculate_trim_output(self, x):
+        alpha, elevator, throttle = x
+        
+        roll, pitch, yaw = quaternion_to_euler(self._state[6:10])
+        self._state[6:10] = euler_to_quaternion(roll, alpha, yaw)
+        
+        self.initialize_velocity(self._Va, alpha, self._beta)
+        
+        delta=MsgDelta()
+        delta.elevator = elevator
+        delta.throttle = throttle
+        
+        forces = self._forces_moments(delta=delta)
+        
+        # Cost Function
+        return(forces[0]**2 + forces[2]**2 + forces[4]**2)
 
     ###################################
     # public functions
@@ -79,10 +108,10 @@ class MavDynamics(MavDynamicsForces):
         # compute airspeed (self._Va = ?)
         self._Va = np.linalg.norm(Va_b, axis=0)[0]
         
-        # compute angle of attack (self._alpha = ?)
+        # compute angle of attack 
         self._alpha = np.arctan2(wr, ur)
         
-        # compute sideslip angle (self._beta = ?)
+        # compute sideslip angle 
         self._beta = np.arcsin(vr/self._Va)
 
     def _forces_moments(self, delta):
@@ -93,22 +122,20 @@ class MavDynamics(MavDynamicsForces):
         """
         ##### TODO ######
         # extract states (phi, theta, psi, p, q, r)
-        # phi = self.true_state.phi and etc
         phi, theta, psi = quaternion_to_euler(self._state[6:10])
         
         # import the rotation first at the top of the code, 
         # euler_to_rotation is Rb_i (from Body to Inertial), so we must tranpose it
         Ri_b = euler_to_rotation(phi, theta, psi).T
         
-        p = self._state.item(10)
-        q = self._state.item(11)
-        r = self._state.item(12)
-        
-        # Chnaged in the class
         # p = self._state[10,0]
         # q = self._state[11,0]
         # r = self._state[12,0]
-        
+
+        p = self._state.item(10)
+        q = self._state.item(11)
+        r = self._state.item(12)
+                
         # compute gravitational forces ([fg_x, fg_y, fg_z])
         fg_i = [[0], [0], [MAV.mass * MAV.gravity]]
         fg_b = np.matmul(Ri_b, fg_i)
@@ -235,4 +262,3 @@ class MavDynamics(MavDynamicsForces):
         self.true_state.bz = 0
         self.true_state.camera_az = 0
         self.true_state.camera_el = 0
-

@@ -10,19 +10,21 @@ part of mavsim
 """
 import numpy as np
 
+# initial values for control intput U=[elevator,aileron,rudder,throttle]
+
 class MsgDelta:
     def __init__(self,
-                 elevator=0.0,
-                 aileron=0.0,
-                 rudder=0.0,
-                 throttle=0.5,
-                 azimuth_cmd=0.0,
-                 elevation_cmd=0.0):
+                 elevator = 0.0,
+                 aileron = 0.0,
+                 rudder = 0.0,
+                 throttle = 0.5,
+                 azimuth_cmd = 0.0,
+                 elevation_cmd = 0.0):
         
-        self.elevator = elevator  # elevator command
-        self.aileron = aileron    # aileron command
-        self.rudder = rudder      # rudder command
-        self.throttle = throttle  # throttle command
+        self.elevator = elevator        # elevator command
+        self.aileron = aileron          # aileron command
+        self.rudder = rudder            # rudder command
+        self.throttle = throttle        # throttle command
         self.gimbal_az = azimuth_cmd    # azimuth command for gimbal
         self.gimbal_el = elevation_cmd  # elevation command for gimbal
 

@@ -185,7 +185,7 @@ class MavDynamics:
         self.true_state.beta = 0    # sideslipe angle
         
         # update the ground velocity
-        self.true_state.Vg = np.sqrt(self._state.item(3)**2.0 + self._state.item(4)**2.0 + self._state.item(5)**2.0 ) 
+        self.true_state.Vg = np.sqrt(self._state.item(3)**2 + self._state.item(4)**2 + self._state.item(5)**2 ) 
         
         self.true_state.gamma = 0
         self.true_state.chi = 0

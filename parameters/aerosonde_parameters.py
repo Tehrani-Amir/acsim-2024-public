@@ -7,7 +7,7 @@ from tools.rotations import euler_to_quaternion
 # Define the Initial conditions for MAV
 north0 = 0.     # initial north position
 east0 = 0.      # initial east position
-down0 = -200.0  # initial down position
+down0 = -100.0  # initial down position
 
 u0 = 25         # initial velocity along body x-axis
 v0 = 0.0        # initial velocity along body y-axis
@@ -105,13 +105,13 @@ C_n_delta_r = -0.069    # -0.032
 # Prop parameters
 D_prop = 20*(0.0254)                              # prop diameter in m
 C_prop = 1.0                                      # Aerodynamic coefficient for the propeller
-k_motor = 80                                      # Constant that specifies the efficiency of the motor
+k_motor = 40                                      # Constant that specifies the efficiency of the motor
 k_T_p = 0                                         # Constant determined by the experiment
 K_omega = 0                                       # Constant
 
 # Motor parameters
 KV_rpm_per_volt = 145.                            # Motor speed constant from datasheet in RPM/V
-KV = (1. / KV_rpm_per_volt) * 60. / (2. * np.pi)  # Back-emf constant, KV in V-s/rad
+KV = (1. / KV_rpm_per_volt) * 60. / (2.0 * np.pi)  # Back-emf constant, KV in V-s/rad
 KQ = KV                                           # Motor torque constant, KQ in N-m/A
 R_motor = 0.042                                   # Resistance of the motot winding (ohms)
 i0 = 1.5                                          # no-load (zero-torque) current (A)

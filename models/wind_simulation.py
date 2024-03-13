@@ -16,53 +16,57 @@ class WindSimulation:
         # Dryden gust model parameters (Based on Table 4.1-page 56 UAV book) 
         # Check the altitude and Turbulence
         
-        Altitude = 200
-        Turbulence = "light"
+        # Altitude = 100
+        # Turbulence = "light"
 
-        if abs(Altitude)<600: # low altitude
-            Lu = 200
-            Lv = 200
-            Lw = 50
+        # if abs(Altitude)<600: # low altitude
+        #     Lu = 200
+        #     Lv = 200
+        #     Lw = 50
             
-            if Turbulence == "light":      # light turbulence
-                delta_u = 1.06
-                delta_v = 1.06
-                delta_w = 0.7
+        #     if Turbulence == "light":      # light turbulence
+        #         delta_u = 1.06
+        #         delta_v = 1.06
+        #         delta_w = 0.7
             
-            else:                          # moderate turbulence
-                delta_u = 1.06
-                delta_v = 1.06
-                delta_w = 0.7  
-        else:                              # medium altitude
-            Lu = 533
-            Lv = 533
-            Lw = 533
+        #     else:                          # moderate turbulence
+        #         delta_u = 1.06
+        #         delta_v = 1.06
+        #         delta_w = 0.7  
+        # else:                              # medium altitude
+        #     Lu = 533
+        #     Lv = 533
+        #     Lw = 533
             
-            if Turbulence == "light":     # light turbulence
-                delta_u = 1.5
-                delta_v = 1.5
-                delta_w = 1.5
-            else:                         # moderate turbulence
-                delta_u = 3.0
-                delta_v = 3.0
-                delta_w = 3.0
+        #     if Turbulence == "light":     # light turbulence
+        #         delta_u = 1.5
+        #         delta_v = 1.5
+        #         delta_w = 1.5
+        #     else:                         # moderate turbulence
+        #         delta_u = 3.0
+        #         delta_v = 3.0
+        #         delta_w = 3.0
                 
-        # Dryden transfer functions (section 4.4 UAV book) - Fill in proper num and den
+        # # Dryden transfer functions (section 4.4 UAV book) - Fill in proper num and den
                         
-        # PLEASE REPLACE the CORRECT Value of Va
-        Va = 25
+        # # PLEASE Update Va
+        # Va = 25
         
-        Hu = delta_u*np.sqrt((2*Va)/(Lu))
-        Hv = delta_v*np.sqrt((3*Va)/Lv)
-        Hw = delta_w*np.sqrt((3*Va)/Lw)
+        # Hu = delta_u*np.sqrt((2*Va)/(Lu))
+        # Hv = delta_v*np.sqrt((3*Va)/Lv)
+        # Hw = delta_w*np.sqrt((3*Va)/Lw)
         
-        # example of encoding system into num and den
-        # Considering the system = (s + 2) / (s^3 + 4s^2 + 5s + 6)
-        # num = np.array([[1, 2]]) and den = np.array([[1, 4, 5, 6]])
+        # # example of encoding system into num and den
+        # # Considering the system = (s + 2) / (s^3 + 4s^2 + 5s + 6)
+        # # num = np.array([[1, 2]]) and den = np.array([[1, 4, 5, 6]])
 
-        self.u_w = TransferFunction(num=np.array([[Hu]]), den=np.array([[1, (Va/Lu)]]),Ts=Ts)
-        self.v_w = TransferFunction(num=np.array([[Hv, Va/(np.sqrt(3)*Lv)]]), den=np.array([[1, (2*Va/Lv), (Va/Lv)**2]]), Ts=Ts)
-        self.w_w = TransferFunction(num=np.array([[Hw, Va/(np.sqrt(3)*Lw)]]), den=np.array([[1, (2*Va/Lw), (Va/Lw)**2]]), Ts=Ts)
+        # self.u_w = TransferFunction(num=np.array([[Hu]]), den=np.array([[1, (Va/Lu)]]),Ts=Ts)
+        # self.v_w = TransferFunction(num=np.array([[Hv, Va/(np.sqrt(3)*Lv)]]), den=np.array([[1, (2*Va/Lv), (Va/Lv)**2]]), Ts=Ts)
+        # self.w_w = TransferFunction(num=np.array([[Hw, Va/(np.sqrt(3)*Lw)]]), den=np.array([[1, (2*Va/Lw), (Va/Lw)**2]]), Ts=Ts)
+        
+        self.u_w = TransferFunction(num=np.array([[0]]), den=np.array([[1, 1]]),Ts=Ts)
+        self.v_w = TransferFunction(num=np.array([[0, 0]]), den=np.array([[1, 1, 1]]), Ts=Ts)
+        self.w_w = TransferFunction(num=np.array([[0, 0]]), den=np.array([[1, 1, 1]]), Ts=Ts)
         self._Ts = Ts
 
     def update(self):

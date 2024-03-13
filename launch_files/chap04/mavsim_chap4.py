@@ -21,6 +21,8 @@ from models.wind_simulation import WindSimulation
 from viewers.mav_viewer import MavViewer
 from viewers.data_viewer import DataViewer
 from message_types.msg_delta import MsgDelta
+from mystuff.process_control_inputs import process_control_inputs
+from mystuff.trim import compute_trim
 
 import keyboard
 
@@ -52,10 +54,40 @@ wind = WindSimulation(SIM.ts_simulation)
 mav = MavDynamics(SIM.ts_simulation)
 delta = MsgDelta()
 
+# create initialization parameters
+Va0 = 20  
+alpha0 = 0.
+beta0 = 0.
+
+# call the function
+mav.initialize_velocity(Va0, alpha0, beta0)
+
+# first guess of trim
+delta.elevator = -0.1248
+delta.aileron = 0.0
+delta.rudder = 0.0
+delta.throttle = 0.6768
+
 # initialize the simulation time
 sim_time = SIM.start_time
 plot_time = sim_time
-end_time = 60
+end_time = 100
+
+# find trim output
+alpha, elevator, throttle = compute_trim(mav, delta)
+# re-initializing based on the trim input
+mav.initialize_velocity(Va0, alpha, beta0)
+delta.elevator = elevator 
+delta.elevator = throttle
+
+# This means that to maintain the defined airspeed the input should be:
+print(alpha, delta.elevator, delta.throttle)
+# exit()
+
+alpha, elevator, throttle = compute_trim(mav, delta)
+mav.initialize_velocity(Va0, alpha, beta0)
+delta.elevator = elevator
+delta.throttle = throttle
 
 # main simulation loop
 print("Press 'Esc' to exit...")
@@ -63,37 +95,12 @@ print("Press 'Esc' to exit...")
 while sim_time < end_time:
     # ------- set control surfaces -------------
     
-    # Define the function to update control surfaces based on keyboard input
+    # Update control surfaces based on keyboard input
+    process_control_inputs(delta)
     
-    # Adjust control surfaces based on keyboard input
-    if keyboard.is_pressed('up'):
-        delta.elevator += 0.005
-    elif keyboard.is_pressed('down'):
-        delta.elevator -= 0.005
-        
-    if keyboard.is_pressed('right'):
-        delta.aileron += 0.005
-    elif keyboard.is_pressed('left'):
-        delta.aileron -= 0.005
-        
-    if keyboard.is_pressed('d'):
-        delta.rudder += 0.005
-    elif keyboard.is_pressed('a'):
-        delta.rudder -= 0.005
-        
-    if keyboard.is_pressed('w'):
-        delta.throttle += 0.01
-    elif keyboard.is_pressed('s'):
-        delta.throttle -= 0.01
-        
     if keyboard.is_pressed('esc'):
         break
     
-    # delta.elevator = 0               # -0.1248
-    # delta.aileron = 0                # 0.001836
-    # delta.rudder = 0                 # -0.0003026
-    # delta.throttle = 0               # 0.6768
-
     # ------- physical system -------------
     current_wind = wind.update()  # get the new wind vector
     mav.update(delta, current_wind)  # propagate the MAV dynamics

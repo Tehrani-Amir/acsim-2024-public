@@ -1,0 +1,49 @@
+
+from models.mav_dynamics_control import MavDynamics
+from message_types.msg_delta import MsgDelta
+from scipy.optimize import minimize
+import numpy as np
+
+def compute_trim(mav: MavDynamics, delta: MsgDelta):
+    
+    # parameters to input for the trim longitudinally
+    # alpha, elevator, throttle
+    
+    print(mav._forces_moments(delta=MsgDelta()))
+    
+    # calculate forces_moments with defined I.C.s
+    forces_moments = mav._forces_moments(delta=delta)
+    fx = forces_moments[0]
+    fz = forces_moments[2]
+    m = forces_moments[4]
+    print(fx, fz, m)
+
+    # re-initializing the velocity by changing alpha
+    delta_alpha = 0.1
+    mav.initialize_velocity(mav._Va, mav._alpha + delta_alpha, mav._beta)    
+    forces_moments = mav._forces_moments(delta=delta)
+    fx_new = forces_moments[0]
+    fz_new = forces_moments[2]
+    m_new = forces_moments[4]
+    # print(fx_new, fz_new, m_new)
+
+    # Finding Jacobian
+    fx_delta = (fx_new - fx)/delta_alpha
+    fz_delta = (fz_new - fz)/delta_alpha
+    m_delta = (m_new - m)/delta_alpha
+    print(fx_delta, fz_delta, m_delta)
+    
+    # Update delta_alpha
+    delta_alpha = -fx / fx_delta
+    
+    # reduce the step size by diving delta_alpha by 8  
+    # update anc check forces_moments
+    computer_parameters(mav, delta, delta_alpha/8)
+    
+def computer_parameters(mav: MavDynamics, delta: MsgDelta, delta_alpha: float):
+    mav.initialize_velocity(mav._Va, mav._alpha + delta_alpha, mav._beta)
+    forces_moments = mav._forces_moments(delta=delta)
+    fx = forces_moments[0]
+    fz = forces_moments[2]
+    m = forces_moments[4]
+    print(fx, fz, m)
