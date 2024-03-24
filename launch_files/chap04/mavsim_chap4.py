@@ -55,7 +55,7 @@ mav = MavDynamics(SIM.ts_simulation)
 delta = MsgDelta()
 
 # create initialization parameters
-Va0 = 30  
+Va0 = 25  
 alpha0 = 0.
 beta0 = 0.
 

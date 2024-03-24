@@ -6,15 +6,17 @@ compute_ss_model
 """
 import numpy as np
 from scipy.optimize import minimize
-from tools.rotations import Euler2Quaternion, Quaternion2Euler
+from tools.rotations import quaternion_to_euler, euler_to_quaternion
 import parameters.aerosonde_parameters as MAV
 from parameters.simulation_parameters import ts_simulation as Ts
 from message_types.msg_delta import MsgDelta
 
-
+# this function is used to save the data into model_coef.py
 def compute_model(mav, trim_state, trim_input):
+    
     # Note: this function alters the mav private variables
     A_lon, B_lon, A_lat, B_lat = compute_ss_model(mav, trim_state, trim_input)
+    
     Va_trim, alpha_trim, theta_trim, a_phi1, a_phi2, a_theta1, a_theta2, a_theta3, \
     a_V1, a_V2, a_V3 = compute_tf_model(mav, trim_state, trim_input)
 
@@ -82,27 +84,38 @@ def compute_model(mav, trim_state, trim_input):
     file.write('Ts = %f\n' % Ts)
     file.close()
 
-
+# this function is used to calculate coefficients 
 def compute_tf_model(mav, trim_state, trim_input):
+    
     # trim values
     mav._state = trim_state
     mav._update_velocity_data()
     Va_trim = mav._Va
     alpha_trim = mav._alpha
-    phi, theta_trim, psi = Quaternion2Euler(trim_state[6:10])
+    phi, theta_trim, psi = quaternion_to_euler(trim_state[6:10])
 
     ###### TODO ######
-    # define transfer function constants
-    a_phi1 = 0
-    a_phi2 = 0
-    a_theta1 = 0
-    a_theta2 = 0
-    a_theta3 = 0
+    
+    # delta_e = trim_input.elevator, 
+    # delta_a = trim_input.aileron, 
+    # delta_r = trim_input.rudder, 
+    # delta_t = trim_input.throttle
+    delta_e, delta_a, delta_r, delta_t = trim_input
+    
+    # define transfer function constants, chapter 5.4
+    a_phi1 = -0.5 * MAV.rho * MAV._Va2**2 * MAV.S_wing * MAV.b * MAV.C_p_p * MAV.b / (2*MAV._Va)
+    a_phi2 = +0.5 * MAV.rho * MAV._Va2**2 * MAV.S_wing * MAV.b * MAV.C_p_delta_a
+    
+    a_theta1 = -0.5 * MAV.rho * MAV._Va2**2 * MAV.S_wing * MAV.c * MAV.C_m_q *MAV.c / (2*MAV._Va * MAV.Jy)
+    a_theta2 = -0.5 * MAV.rho * MAV._Va2**2 * MAV.S_wing * MAV.c * MAV.C_m_alpha  / (MAV.Jy)
+    a_theta3 = +0.5 * MAV.rho * MAV._Va2**2 * MAV.S_wing * MAV.c * MAV.C_m_delta_e  / (MAV.Jy)
 
     # Compute transfer function coefficients using new propulsion model
-    a_V1 = 0
-    a_V2 = 0
-    a_V3 = 0
+    a_V1 = (1/MAV.mass) * MAV.rho * Va_trim * MAV.S * (MAV.C_D_0 + MAV.C_D_alpha * alpha_trim + MAV.C_D_delta_e * delta_e) + (1/MAV.mass) * MAV.rho * Va_trim *MAV.S_prop * MAV.C_prop
+    a_V2 = (1/MAV.mass) * MAV.rho  * MAV.S_prop * MAV.C_prop * MAV.k_motor**2 * delta_t
+    
+    chi_trim = 0
+    a_V3 = MAV.gravity * np.cos(theta_trim - chi_trim)
 
     return Va_trim, alpha_trim, theta_trim, a_phi1, a_phi2, a_theta1, a_theta2, a_theta3, a_V1, a_V2, a_V3
 
@@ -113,6 +126,7 @@ def compute_ss_model(mav, trim_state, trim_input):
     ##### TODO #####
     A = df_dx(mav, x_euler, trim_input)
     B = df_du(mav, x_euler, trim_input)
+    
     # extract longitudinal states (u, w, q, theta, pd)
     A_lon = np.zeros((5,5))
     B_lon = np.zeros((5,2))
@@ -127,8 +141,24 @@ def euler_state(x_quat):
     # convert state x with attitude represented by quaternion
     # to x_euler with attitude represented by Euler angles
     
-    ##### TODO #####
+        ##### TODO #####
     x_euler = np.zeros((12,1))
+    
+    pn = x_quat.item(0)
+    pe = x_quat.item(1)
+    pd = x_quat.item(2)
+    u = x_quat.item(3)
+    v = x_quat.item(4)
+    w = x_quat.item(5)
+
+    phi, theta, psi = quaternion_to_euler(x_quat[6:10])
+
+    p = x_quat.item(9)
+    q = x_quat.item(10)
+    r = x_quat.item(11)
+    
+    x_euler = np.array([pn, pe, pd, u, v, w, phi, theta, psi, p, q, r])
+    
     return x_euler
 
 def quaternion_state(x_euler):
@@ -136,7 +166,23 @@ def quaternion_state(x_euler):
     # to x_quat with attitude represented by quaternions
 
     ##### TODO #####
-    x_quat = np.zeros((13,1))
+    # x_quat = np.zeros((13,1))
+
+    pn =x_euler.item(0)
+    pe = x_euler.item(1)
+    pd = x_euler.item(2)
+    u = x_euler.item(3)
+    v = x_euler.item(4)
+    w = x_euler.item(5)
+    
+    e0, e1, e2, e3 = euler_to_quaternion(x_euler[6:9])
+    
+    p = x_quat.item(10)
+    q = x_quat.item(11)
+    r = x_quat.item(12)
+    
+    x_quat = np.array([pn, pe, pd, u, v, w, e0, e1, e1, e2, p, q, r])
+    
     return x_quat
 
 def f_euler(mav, x_euler, delta):
@@ -161,6 +207,9 @@ def df_dx(mav, x_euler, delta):
 
     ##### TODO #####
     A = np.zeros((12, 12))  # Jacobian of f wrt x
+    
+    # A longitudinal 
+    
     return A
 
 

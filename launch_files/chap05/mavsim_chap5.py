@@ -12,8 +12,9 @@ from pathlib import Path
 sys.path.insert(0,os.fspath(Path(__file__).parents[1]))
 # use QuitListener for Linux or PC <- doesn't work on Mac
 #from tools.quit_listener import QuitListener
-import pyqtgraph as pg
+
 import numpy as np
+import pyqtgraph as pg
 import parameters.simulation_parameters as SIM
 from viewers.mav_viewer import MavViewer
 from viewers.data_viewer import DataViewer
@@ -48,16 +49,19 @@ if PLOTS:
     data_view = DataViewer(app=app,dt=SIM.ts_simulation, plot_period=SIM.ts_plot_refresh, 
                            data_recording_period=SIM.ts_plot_record_data, time_window_length=30)
 
-# initialize elements of the architecture
+# Step 1: Initialize elements of the architecture
 wind = WindSimulation(SIM.ts_simulation)
 mav = MavDynamics(SIM.ts_simulation)
 
-# use compute_trim function to compute trim state and trim input
+# Step 2: specifying parameters Va*, gamma*, and R*
 Va = 25.
 gamma = 0.*np.pi/180.
+
+# Step 3: use compute_trim function to compute trim state and trim input
 trim_state, trim_input = compute_trim(mav, Va, gamma)
-mav._state = trim_state  # set the initial state of the mav to the trim state
-delta = trim_input  # set input to constant constant trim input
+
+mav._state = trim_state     # set the initial state of the mav to the trim state
+delta = trim_input          # set input to constant constant trim input
 
 # # compute the state space model linearized about trim
 if COMPUTE_MODEL:
@@ -117,6 +121,3 @@ if SAVE_PLOT_IMAGE:
 
 if VIDEO is True:
     video.close()
-
-
-
