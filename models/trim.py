@@ -22,7 +22,7 @@ def compute_trim(mav, Va, gamma):
     
     state0 = np.array([[0],  # pn
                    [0],  # pe
-                   [0],  # pd
+                   [-100],  # pd
                    [0],  # u
                    [0.], # v
                    [0.], # w
@@ -107,10 +107,10 @@ def trim_objective_fun(x, mav, Va, gamma):
     
     # take numerically derivative of the function "state" at a specific point
     # therefore, f is x_dot
-    f = mav._derivatives(state, forces_moments)
+    state_dot = mav._derivatives(state, forces_moments)
     
-    tmp = desired_trim_state_dot - f
+    diff = desired_trim_state_dot - state_dot
     
-    J = np.linalg.norm(tmp[2:13])**2.0
+    J = np.linalg.norm(diff[2:13])**2.0
     
     return J
