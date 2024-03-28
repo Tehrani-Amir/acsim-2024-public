@@ -9,7 +9,7 @@ mavsim_python
 import os, sys
 # insert parent directory at beginning of python search path
 from pathlib import Path
-sys.path.insert(0,os.fspath(Path(__file__).parents[1]))
+sys.path.insert(0,os.fspath(Path(__file__).parents[2]))
 # use QuitListener for Linux or PC <- doesn't work on Mac
 #from tools.quit_listener import QuitListener
 
@@ -56,6 +56,23 @@ mav = MavDynamics(SIM.ts_simulation)
 # Step 2: specified-user parameters Va*, gamma*, and R*
 Va = 25.
 gamma = 0.*np.pi/180.
+
+# delta = MsgDelta()
+# Va0 = 25.
+# alpha0 = 0.
+# beta0 = 0.
+
+# delta.elevator = -0.1248
+# delta.aileron = 0.0
+# delta.rudder=-0.0
+# delta.throttle = 0.6768
+
+# mav.initialize_velocity(Va0, alpha0, beta0)
+
+# alpha, elevator, throttle = compute_trim(mav, delta)
+# mav.initialize_velocity(Va0, alpha, beta0)
+# delta.elevator = elevator
+# delta.throttle = throttle
 
 # Step 3: use compute_trim function to compute trim state and trim input
 trim_state, trim_input = compute_trim(mav, Va, gamma)

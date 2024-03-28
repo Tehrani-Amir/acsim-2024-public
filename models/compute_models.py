@@ -7,6 +7,7 @@ compute_ss_model
 import numpy as np
 from scipy.optimize import minimize
 from tools.rotations import quaternion_to_euler, euler_to_quaternion
+from tools.rotations import quaternion_to_rotation, euler_to_rotation 
 import parameters.aerosonde_parameters as MAV
 from parameters.simulation_parameters import ts_simulation as Ts
 from message_types.msg_delta import MsgDelta
@@ -88,10 +89,11 @@ def compute_model(mav, trim_state, trim_input):
 def compute_tf_model(mav, trim_state, trim_input):
     
     # trim values
-    mav._state = trim_state
     mav._update_velocity_data()
+    mav._state = trim_state
     Va_trim = mav._Va
     alpha_trim = mav._alpha
+    
     phi, theta_trim, psi = quaternion_to_euler(trim_state[6:10])
 
     ###### TODO ######
@@ -129,12 +131,45 @@ def compute_ss_model(mav, trim_state, trim_input):
     
     # extract longitudinal states (u, w, q, theta, pd)
     A_lon = np.zeros((5,5))
+    
+    A_lon[0,0] = A[3,3]
+    A_lon[0,1] = A[3,5]
+    A_lon[0,2] = A[3,10]
+    A_lon[0,3] = A[3,7]
+    A_lon[0,4] = A[3,2]
+    A_lon[1,0] = A[5,3]
+    A_lon[1,1] = A[5,5]
+    A_lon[1,2] = A[5,10]
+    A_lon[1,3] = A[5,7]
+    A_lon[1,4] = A[5,2]
+    A_lon[2,0] = A[10,3]
+    A_lon[2,1] = A[10,5]
+    A_lon[2,2] = A[10,10]
+    A_lon[2,3] = A[10,7]
+    A_lon[2,4] = A[10,2]
+    A_lon[3,0] = A[7,3]
+    A_lon[3,1] = A[7,5]
+    A_lon[3,2] = A[7,10]
+    A_lon[3,3] = A[7,7]
+    A_lon[3,4] = A[7,2]
+    A_lon[4,0] = A[2,3]
+    A_lon[4,1] = A[2,5]
+    A_lon[4,2] = A[2,10]
+    A_lon[4,3] = A[2,7]
+    A_lon[4,4] = A[2,2]
+
+    print(A_lon)
+    
+    eigenvalues, eigenvectors = np.linalg.eig(A_lon)
+    print(eigenvalues)
+    
     B_lon = np.zeros((5,2))
     # change pd to h
 
     # extract lateral states (v, p, r, phi, psi)
     A_lat = np.zeros((5,5))
     B_lat = np.zeros((5,2))
+    
     return A_lon, B_lon, A_lat, B_lat
 
 def euler_state(x_quat):
@@ -143,6 +178,25 @@ def euler_state(x_quat):
     
         ##### TODO #####
     x_euler = np.zeros((12,1))
+
+    # e0 = x_quat[6]
+    # e1 = x_quat[7]
+    # e2 = x_quat[8]
+    # e3 = x_quat[9]
+    # phi, theta, psi = quaternion_to_euler(np.matrix([e0, e1, e2, e3]))
+    
+    # x_euler[0] = x_quat[0]
+    # x_euler[1] = x_quat[1]
+    # x_euler[2] = x_quat[2]
+    # x_euler[3] = x_quat[3]
+    # x_euler[4] = x_quat[4]
+    # x_euler[5] = x_quat[5]
+    # x_euler[6] = phi
+    # x_euler[7] = theta
+    # x_euler[8] = psi
+    # x_euler[9] = x_quat[10]
+    # x_euler[10] = x_quat[11]
+    # x_euler[11] = x_quat[12]
     
     pn = x_quat.item(0)
     pe = x_quat.item(1)
@@ -152,7 +206,7 @@ def euler_state(x_quat):
     w = x_quat.item(5)
 
     phi, theta, psi = quaternion_to_euler(x_quat[6:10])
-
+    
     p = x_quat.item(9)
     q = x_quat.item(10)
     r = x_quat.item(11)
@@ -193,11 +247,32 @@ def f_euler(mav, x_euler, delta):
     # partial of Quaternion2Euler(quat) with respect to quat
     # compute partial Quaternion2Euler(quat) with respect to quat
     # dEuler/dt = dEuler/dquat * dquat/dt
+    
     x_quat = quaternion_state(x_euler)
     mav._state = x_quat
     mav._update_velocity_data()
+    
+    forces_moments = mav._forces_moments(delta)
+    
     ##### TODO #####
-    f_euler_ = np.zeros((12,1))
+    # f_euler_ = np.zeros((12,1))
+    return_state = mav._f(x_quat, forces_moments)
+    f_euler_ = euler_state(return_state)
+    
+    phi = x_euler[6]
+    theta = x_euler[7]
+    
+    p = x_euler[9]
+    q = x_euler[10]
+    r = x_euler[11]
+    
+    phi_dot = p + q * np.sin(phi) * np.tan(theta) + r * np.cos(phi) * np.tan(theta)
+    theta_dot = q * np.cos(phi) - r * np.sin(phi)
+    psi_dot = q * np.sin(phi) * (1/np.cos(theta)) + r * np.cos(phi) * (1/np.cos(theta))
+
+    f_euler_[6] = phi_dot
+    f_euler_[7] = theta_dot
+    f_euler_[8] = psi_dot
 
     return f_euler_
 
@@ -209,7 +284,15 @@ def df_dx(mav, x_euler, delta):
     A = np.zeros((12, 12))  # Jacobian of f wrt x
     
     # A longitudinal 
+    f_at_x = f_euler(mav, x_euler, delta)
     
+    for i in range(0, 12):
+        x_eps = np.copy(x_euler)
+        x_eps[i][0] += eps
+        f_at_x_eps = f_euler(mav, x_eps, delta)
+        df_dxi = (f_at_x_eps - f_at_x) / eps
+        A[:,i] = df_dxi[:,0]
+        
     return A
 
 

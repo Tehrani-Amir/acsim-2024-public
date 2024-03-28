@@ -42,6 +42,9 @@ def compute_trim(mav, Va, gamma):
     
     # concatenate/combine the guess values
     x0 = np.concatenate((state0, delta0), axis=0)
+    # Reshape x0 into a 1D array
+    x0 = x0.flatten()  # or x0 = np.ravel(x0)
+    print(x0)
     
     # define equality constraints
     cons = ({'type': 'eq',
