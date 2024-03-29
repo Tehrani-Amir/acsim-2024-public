@@ -7,7 +7,6 @@ mavsim_python
 import numpy as np
 import matplotlib.pyplot as plt
 
-
 class Signals:
     def __init__(self,
                  amplitude=1.0,
@@ -15,6 +14,7 @@ class Signals:
                  start_time=0.0,
                  duration=0.01,
                  dc_offset = 0.0):
+        
         self.amplitude = amplitude
         self.frequency = frequency  # radians/sec
         self.period = 1.0/frequency
@@ -151,6 +151,7 @@ if __name__ == "__main__":
     # output = [input.sawtooth(sim_time)]
     # output = [input.trapezoid(sim_time)]
     output = [input.polynomial(sim_time)]
+    
     while sim_time <= 10.0:
         #y = input.sinusoid(sim_time)
         #y = input.step(sim_time)
@@ -170,5 +171,3 @@ if __name__ == "__main__":
     # plot output vs time
     plt.plot(time, output)
     plt.show()
-
-

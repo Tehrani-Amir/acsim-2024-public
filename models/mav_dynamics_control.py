@@ -34,7 +34,7 @@ class MavDynamics(MavDynamicsForces):
         self._alpha = alpha
         self._beta = beta
         
-        # calculate airspeed components
+        # calculate airspeed components (u=ur, v=vr, w=wr)
         self._state[3] = Va * np.cos(alpha) * np.cos(beta)
         self._state[4] = Va * np.sin(beta)
         self._state[5] = Va * np.sin(alpha) * np.cos(beta)
@@ -46,17 +46,18 @@ class MavDynamics(MavDynamicsForces):
         # update the message class for the true state
         self._update_true_state()
 
-
     ## Objective Longitudinal Trim Function
     def calculate_trim_output(self, x):
         alpha, elevator, throttle = x
         
         roll, pitch, yaw = quaternion_to_euler(self._state[6:10])
+        
+        # theta = alpha + gamma, in trim condition gamma is zero, so theta=alpha
         self._state[6:10] = euler_to_quaternion(roll, alpha, yaw)
         
         self.initialize_velocity(self._Va, alpha, self._beta)
         
-        delta=MsgDelta()
+        delta = MsgDelta()
         delta.elevator = elevator
         delta.throttle = throttle
         
@@ -77,8 +78,10 @@ class MavDynamics(MavDynamicsForces):
         # get forces and moments acting on rigid bod
         forces_moments = self._forces_moments(delta)
         super()._rk4_step(forces_moments)
+        
         # update the airspeed, angle of attack, and side slip angles using new state
         self._update_velocity_data(wind)
+        
         # update the message class for the true state
         self._update_true_state()
 
@@ -127,10 +130,6 @@ class MavDynamics(MavDynamicsForces):
         # import the rotation first at the top of the code, 
         # euler_to_rotation is Rb_i (from Body to Inertial), so we must tranpose it
         Ri_b = euler_to_rotation(phi, theta, psi).T
-        
-        # p = self._state[10,0]
-        # q = self._state[11,0]
-        # r = self._state[12,0]
 
         p = self._state.item(10)
         q = self._state.item(11)
@@ -189,6 +188,7 @@ class MavDynamics(MavDynamicsForces):
         f_prop = [[fx_p], [0], [0]]
         
         Tp = -MAV.k_T_p * (MAV.K_omega * delta_t)**2
+        Tp = 0
         m_prop = np.array([[Tp], [0], [0]])
         
         # compute total forces in body frame
@@ -231,34 +231,48 @@ class MavDynamics(MavDynamicsForces):
         CT = MAV.C_T0 + MAV.C_T1 * J_op + MAV.C_T2 * J_op**2
         CQ = MAV.C_Q0 + MAV.C_Q1 * J_op + MAV.C_Q2 * J_op**2
         
-        thrust_prop = MAV.rho * (Omega_p/(2*np.pi)**2) * MAV.D_prop**4 * CT
-        torque_prop = MAV.rho * (Omega_p/(2*np.pi)**2) * MAV.D_prop**5 * CQ
+        # Based on the pdf Book
+        # thrust_prop = MAV.rho * (Omega_p/(2*np.pi)**2) * MAV.D_prop**4 * CT
+        # torque_prop = MAV.rho * (Omega_p/(2*np.pi)**2) * MAV.D_prop**5 * CQ
+                
+        # Based on the New Version of Book
+        thrust_prop = 0.5 * MAV.rho * MAV.S_prop * ((MAV.k_motor*delta_t)**2 - Va**2)
+        torque_prop = 0
 
         return thrust_prop, torque_prop
 
     def _update_true_state(self):
         # rewrite this function because we now have more information
         phi, theta, psi = quaternion_to_euler(self._state[6:10])
+        
         pdot = quaternion_to_rotation(self._state[6:10]) @ self._state[3:6]
+        
         self.true_state.north = self._state.item(0)
         self.true_state.east = self._state.item(1)
         self.true_state.altitude = -self._state.item(2)
+        
         self.true_state.Va = self._Va
         self.true_state.alpha = self._alpha
         self.true_state.beta = self._beta
+        
         self.true_state.phi = phi
         self.true_state.theta = theta
         self.true_state.psi = psi
+        
         self.true_state.Vg = np.linalg.norm(pdot)
         self.true_state.gamma = np.arcsin(pdot.item(2) / self.true_state.Vg)
         self.true_state.chi = np.arctan2(pdot.item(1), pdot.item(0))
+        
         self.true_state.p = self._state.item(10)
         self.true_state.q = self._state.item(11)
         self.true_state.r = self._state.item(12)
+        
         self.true_state.wn = self._wind.item(0)
         self.true_state.we = self._wind.item(1)
+        
         self.true_state.bx = 0
         self.true_state.by = 0
         self.true_state.bz = 0
+        
         self.true_state.camera_az = 0
         self.true_state.camera_el = 0

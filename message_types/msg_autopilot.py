@@ -8,9 +8,9 @@ part of mavsim_python
         2/5/2019 - RWB
 """
 
-
 class MsgAutopilot:
     def __init__(self):
+        
         self.airspeed_command = 0.0  # commanded airspeed m/s
         self.course_command = 0.0  # commanded course angle in rad
         self.altitude_command = 0.0  # commanded altitude in m

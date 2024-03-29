@@ -24,6 +24,8 @@ from controllers.autopilot import Autopilot
 # from controllers.autopilot_tecs import Autopilot
 from viewers.mav_viewer import MavViewer
 from viewers.data_viewer import DataViewer
+from message_types.msg_delta import MsgDelta
+from mystuff.trim import do_trim
 
 #quitter = QuitListener()
 
@@ -52,19 +54,27 @@ if PLOTS:
 # initialize elements of the architecture
 wind = WindSimulation(SIM.ts_simulation)
 mav = MavDynamics(SIM.ts_simulation)
-autopilot = Autopilot(SIM.ts_simulation)
+delta = MsgDelta()
+
+delta = do_trim(mav, Va=25, alpha= 0)
+
+autopilot = Autopilot(ts_control=SIM.ts_simulation, mav=mav, delta=delta)
 
 # autopilot commands
 from message_types.msg_autopilot import MsgAutopilot
+
 commands = MsgAutopilot()
+
 Va_command = Signals(dc_offset=25.0,
                      amplitude=3.0,
                      start_time=2.0,
                      frequency=0.01)
+
 altitude_command = Signals(dc_offset=100.0,
                            amplitude=20.0,
                            start_time=0.0,
                            frequency=0.02)
+
 course_command = Signals(dc_offset=np.radians(180),
                          amplitude=np.radians(45),
                          start_time=5.0,
@@ -73,6 +83,9 @@ course_command = Signals(dc_offset=np.radians(180),
 # initialize the simulation time
 sim_time = SIM.start_time
 end_time = 100
+
+# this signal will be used to excite modes
+input_signal = Signals(amplitude=0.3, duration=0.3, start_time=4.0)
 
 # main simulation loop
 print("Press 'Esc' to exit...")
@@ -86,6 +99,10 @@ while sim_time < end_time:
     # -------autopilot-------------
     estimated_state = mav.true_state  # uses true states in the control
     delta, commanded_state = autopilot.update(commands, estimated_state)
+    
+    # excitation using impulse/doublet function
+    # delta.rudder = delta.rudder + input_signal.impulse(time=sim_time)
+    delta.rudder = delta.rudder + input_signal.doublet(time=sim_time)
 
     # -------physical system-------------
     current_wind = wind.update()  # get the new wind vector
@@ -117,7 +134,4 @@ if SAVE_PLOT_IMAGE:
 
 if VIDEO is True:
     video.close()
-
-
-
 

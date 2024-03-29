@@ -6,20 +6,23 @@ pid_control
 """
 import numpy as np
 
-
 class PIDControl:
-    def __init__(self, kp=0.0, ki=0.0, kd=0.0, Ts=0.01, sigma=0.05, limit=1.0):
+    def __init__(self, kp=0.0, ki=0.0, kd=0.0, Ts=0.01, sigma=0.05, limit=1.0, init_integrator=0.0):
         self.kp = kp
         self.ki = ki
         self.kd = kd
+        
         self.Ts = Ts
         self.limit = limit
-        self.integrator = 0.0
+        
+        self.integrator = init_integrator
         self.error_delay_1 = 0.0
         self.error_dot_delay_1 = 0.0
+        
         self.y_dot = 0.0
         self.y_delay_1 = 0.0
         self.y_dot_delay_1 = 0.0
+        
         # gains for differentiator
         self.a1 = (2.0 * sigma - Ts) / (2.0 * sigma + Ts)
         self.a2 = 2.0 / (2.0 * sigma + Ts)
@@ -31,18 +34,23 @@ class PIDControl:
             self.y_dot = 0.0
             self.y_delay_1 = 0.0
             self.y_dot_delay_1 = 0.0
+            
         # compute the error
         error = y_ref - y
+        
         # update the integrator using trapazoidal rule
         self.integrator = self.integrator \
                           + (self.Ts/2) * (error + self.error_delay_1)
+                          
         # update the differentiator
         error_dot = self.a1 * self.error_dot_delay_1 \
                          + self.a2 * (error - self.error_delay_1)
+                         
         # PID control
         u = self.kp * error \
             + self.ki * self.integrator \
             + self.kd * error_dot
+            
         # saturate PID control at limit
         u_sat = self._saturate(u)
         # integral anti-windup
@@ -59,17 +67,22 @@ class PIDControl:
         if reset_flag is True:
             self.integrator = 0.0
             self.error_delay_1 = 0.0
+            
         # compute the error
         error = y_ref - y
+        
         # update the integrator using trapazoidal rule
         self.integrator = self.integrator \
                           + (self.Ts/2) * (error + self.error_delay_1)
+        
         # PID control
         u = self.kp * error \
             + self.ki * self.integrator \
             - self.kd * ydot
+            
         # saturate PID control at limit
         u_sat = self._saturate(u)
+        
         # integral anti-windup
         #   adjust integrator to keep u out of saturation
         if np.abs(self.ki) > 0.0001:

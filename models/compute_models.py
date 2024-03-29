@@ -98,22 +98,22 @@ def compute_tf_model(mav, trim_state, trim_input):
 
     ###### TODO ######
     
-    # delta_e = trim_input.elevator, 
-    # delta_a = trim_input.aileron, 
-    # delta_r = trim_input.rudder, 
-    # delta_t = trim_input.throttle
-    delta_e, delta_a, delta_r, delta_t = trim_input
+    delta_e = trim_input.elevator
+    delta_a = trim_input.aileron 
+    delta_r = trim_input.rudder 
+    delta_t = trim_input.throttle
+    # delta_e, delta_a, delta_r, delta_t = trim_input
     
     # define transfer function constants, chapter 5.4
-    a_phi1 = -0.5 * MAV.rho * MAV._Va2**2 * MAV.S_wing * MAV.b * MAV.C_p_p * MAV.b / (2*MAV._Va)
-    a_phi2 = +0.5 * MAV.rho * MAV._Va2**2 * MAV.S_wing * MAV.b * MAV.C_p_delta_a
+    a_phi1 = -0.5 * MAV.rho * mav._Va**2 * MAV.S_wing * MAV.b * MAV.C_p_p * MAV.b / (2*mav._Va)
+    a_phi2 = +0.5 * MAV.rho * mav._Va**2 * MAV.S_wing * MAV.b * MAV.C_p_delta_a
     
-    a_theta1 = -0.5 * MAV.rho * MAV._Va2**2 * MAV.S_wing * MAV.c * MAV.C_m_q *MAV.c / (2*MAV._Va * MAV.Jy)
-    a_theta2 = -0.5 * MAV.rho * MAV._Va2**2 * MAV.S_wing * MAV.c * MAV.C_m_alpha  / (MAV.Jy)
-    a_theta3 = +0.5 * MAV.rho * MAV._Va2**2 * MAV.S_wing * MAV.c * MAV.C_m_delta_e  / (MAV.Jy)
+    a_theta1 = -0.5 * MAV.rho * mav._Va**2 * MAV.S_wing * MAV.c * MAV.C_m_q *MAV.c / (2*mav._Va * MAV.Jy)
+    a_theta2 = -0.5 * MAV.rho * mav._Va**2 * MAV.S_wing * MAV.c * MAV.C_m_alpha  / (MAV.Jy)
+    a_theta3 = +0.5 * MAV.rho * mav._Va**2 * MAV.S_wing * MAV.c * MAV.C_m_delta_e  / (MAV.Jy)
 
     # Compute transfer function coefficients using new propulsion model
-    a_V1 = (1/MAV.mass) * MAV.rho * Va_trim * MAV.S * (MAV.C_D_0 + MAV.C_D_alpha * alpha_trim + MAV.C_D_delta_e * delta_e) + (1/MAV.mass) * MAV.rho * Va_trim *MAV.S_prop * MAV.C_prop
+    a_V1 = (1/MAV.mass) * MAV.rho * mav._Va * MAV.S_wing * (MAV.C_D_0 + MAV.C_D_alpha * alpha_trim + MAV.C_D_delta_e * delta_e) + (1/MAV.mass) * MAV.rho * Va_trim *MAV.S_prop * MAV.C_prop
     a_V2 = (1/MAV.mass) * MAV.rho  * MAV.S_prop * MAV.C_prop * MAV.k_motor**2 * delta_t
     
     chi_trim = 0
@@ -179,39 +179,24 @@ def euler_state(x_quat):
         ##### TODO #####
     x_euler = np.zeros((12,1))
 
-    # e0 = x_quat[6]
-    # e1 = x_quat[7]
-    # e2 = x_quat[8]
-    # e3 = x_quat[9]
-    # phi, theta, psi = quaternion_to_euler(np.matrix([e0, e1, e2, e3]))
+    e0 = x_quat[6]
+    e1 = x_quat[7]
+    e2 = x_quat[8]
+    e3 = x_quat[9]
+    phi, theta, psi = quaternion_to_euler(np.matrix([e0, e1, e2, e3]))
     
-    # x_euler[0] = x_quat[0]
-    # x_euler[1] = x_quat[1]
-    # x_euler[2] = x_quat[2]
-    # x_euler[3] = x_quat[3]
-    # x_euler[4] = x_quat[4]
-    # x_euler[5] = x_quat[5]
-    # x_euler[6] = phi
-    # x_euler[7] = theta
-    # x_euler[8] = psi
-    # x_euler[9] = x_quat[10]
-    # x_euler[10] = x_quat[11]
-    # x_euler[11] = x_quat[12]
-    
-    pn = x_quat.item(0)
-    pe = x_quat.item(1)
-    pd = x_quat.item(2)
-    u = x_quat.item(3)
-    v = x_quat.item(4)
-    w = x_quat.item(5)
-
-    phi, theta, psi = quaternion_to_euler(x_quat[6:10])
-    
-    p = x_quat.item(9)
-    q = x_quat.item(10)
-    r = x_quat.item(11)
-    
-    x_euler = np.array([pn, pe, pd, u, v, w, phi, theta, psi, p, q, r])
+    x_euler[0] = x_quat[0]
+    x_euler[1] = x_quat[1]
+    x_euler[2] = x_quat[2]
+    x_euler[3] = x_quat[3]
+    x_euler[4] = x_quat[4]
+    x_euler[5] = x_quat[5]
+    x_euler[6] = phi
+    x_euler[7] = theta
+    x_euler[8] = psi
+    x_euler[9] = x_quat[10]
+    x_euler[10] = x_quat[11]
+    x_euler[11] = x_quat[12]
     
     return x_euler
 
@@ -220,7 +205,7 @@ def quaternion_state(x_euler):
     # to x_quat with attitude represented by quaternions
 
     ##### TODO #####
-    # x_quat = np.zeros((13,1))
+    x_quat = np.zeros((13,1))
 
     pn =x_euler.item(0)
     pe = x_euler.item(1)
@@ -229,13 +214,17 @@ def quaternion_state(x_euler):
     v = x_euler.item(4)
     w = x_euler.item(5)
     
-    e0, e1, e2, e3 = euler_to_quaternion(x_euler[6:9])
+    euler = euler_to_quaternion(x_euler[6], x_euler[7], x_euler[8])
+    e0 = euler.item(0)
+    e1 = euler.item(1)
+    e2 = euler.item(2)
+    e3 = euler.item(3)
     
-    p = x_quat.item(10)
-    q = x_quat.item(11)
-    r = x_quat.item(12)
+    p = x_euler.item(9)
+    q = x_euler.item(10)
+    r = x_euler.item(11)
     
-    x_quat = np.array([pn, pe, pd, u, v, w, e0, e1, e1, e2, p, q, r])
+    x_quat = np.array([pn, pe, pd, u, v, w, e0, e1, e2, e3, p, q, r])
     
     return x_quat
 

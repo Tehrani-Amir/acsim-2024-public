@@ -20,9 +20,11 @@ from viewers.mav_viewer import MavViewer
 from viewers.data_viewer import DataViewer
 from models.mav_dynamics_control import MavDynamics
 from models.wind_simulation import WindSimulation
-from models.trim import compute_trim
+# from models.trim import compute_trim
+from mystuff.trim import compute_trim
 from models.compute_models import compute_model
 from tools.signals import Signals
+from message_types.msg_delta import MsgDelta
 
 #quitter = QuitListener()
 
@@ -52,33 +54,43 @@ if PLOTS:
 # Step 1: Initialize elements of the architecture
 wind = WindSimulation(SIM.ts_simulation)
 mav = MavDynamics(SIM.ts_simulation)
+delta = MsgDelta()
 
-# Step 2: specified-user parameters Va*, gamma*, and R*
-Va = 25.
-gamma = 0.*np.pi/180.
+# # Step 2: specified-user parameters Va*, gamma*, and R*
+# Va = 25.
+# gamma = 0.*np.pi/180.
 
-# delta = MsgDelta()
-# Va0 = 25.
-# alpha0 = 0.
-# beta0 = 0.
+# # Step 3: use compute_trim function to compute trim state and trim input
+# trim_state, trim_input = compute_trim(mav, Va, gamma)
 
-# delta.elevator = -0.1248
-# delta.aileron = 0.0
-# delta.rudder=-0.0
-# delta.throttle = 0.6768
+# mav._state = trim_state     # set the initial state of the mav to the trim state
+# delta = trim_input          # set input to constant constant trim input
 
-# mav.initialize_velocity(Va0, alpha0, beta0)
+# create initialization user-specified parameters
+Va0 = 25.
+alpha0 = 0.
+beta0 = 0.
+mav.initialize_velocity(Va0, alpha0, beta0)
 
-# alpha, elevator, throttle = compute_trim(mav, delta)
-# mav.initialize_velocity(Va0, alpha, beta0)
-# delta.elevator = elevator
-# delta.throttle = throttle
+# initialize the simulation time
+sim_time = SIM.start_time
+plot_time = sim_time
+end_time = 100
 
-# Step 3: use compute_trim function to compute trim state and trim input
-trim_state, trim_input = compute_trim(mav, Va, gamma)
+# initialize the control input
+delta.elevator = -0.1248
+delta.aileron = 0.0
+delta.rudder=-0.0
+delta.throttle = 0.6768
 
-mav._state = trim_state     # set the initial state of the mav to the trim state
-delta = trim_input          # set input to constant constant trim input
+# use compute_trim function to compute trim state and trim input
+alpha, elevator, throttle = compute_trim(mav, delta)
+mav.initialize_velocity(Va0, alpha, beta0)
+delta.elevator = elevator
+delta.throttle = throttle
+
+trim_state = mav._state
+trim_input = delta
 
 # # compute the state space model linearized about trim
 if COMPUTE_MODEL:
