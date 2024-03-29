@@ -22,9 +22,9 @@ from message_types.msg_delta import MsgDelta
 airspeed_throttle_kp = 0.0
 airspeed_throttle_ki = 0.0001
 
-alpha_elevator_kp = 0
+alpha_elevator_kp = -1
 alpha_elevator_ki = 0.0001
-alpha_elevator_kd = 0
+alpha_elevator_kd = -0.1
 
 yaw_damper_kp = 10.0
 yaw_damper_kd = 1.0

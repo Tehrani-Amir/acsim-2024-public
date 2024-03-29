@@ -56,7 +56,7 @@ wind = WindSimulation(SIM.ts_simulation)
 mav = MavDynamics(SIM.ts_simulation)
 delta = MsgDelta()
 
-delta = do_trim(mav, Va=25, alpha= 0)
+delta = do_trim(mav, Va=30, alpha= 0)
 
 autopilot = Autopilot(ts_control=SIM.ts_simulation, mav=mav, delta=delta)
 
@@ -85,7 +85,7 @@ sim_time = SIM.start_time
 end_time = 100
 
 # this signal will be used to excite modes
-input_signal = Signals(amplitude=0.3, duration=0.3, start_time=4.0)
+input_signal = Signals(amplitude=0.5, duration=0.3, start_time=4.0)
 
 # main simulation loop
 print("Press 'Esc' to exit...")
@@ -102,7 +102,7 @@ while sim_time < end_time:
     
     # excitation using impulse/doublet function
     # delta.rudder = delta.rudder + input_signal.impulse(time=sim_time)
-    delta.rudder = delta.rudder + input_signal.doublet(time=sim_time)
+    delta.rudder = delta.rudder + input_signal.impulse(time=sim_time)
 
     # -------physical system-------------
     current_wind = wind.update()  # get the new wind vector

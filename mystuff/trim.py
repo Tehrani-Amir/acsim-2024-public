@@ -42,4 +42,7 @@ def do_trim(mav, Va, alpha):
     delta.elevator = elevator
     delta.throttle = throttle
     
+    print(delta)
+    print(alpha)
+    
     return delta
