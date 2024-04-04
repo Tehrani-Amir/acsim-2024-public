@@ -225,11 +225,11 @@ class MavDynamics(MavDynamicsForces):
         # n = Omega_p/(2*np.pi) is propeller speed (revolutions/sec)
         
         # the associated advanced ration (op means operating)
-        J_op = (2*np.pi * self._Va) / (Omega_p*MAV.D_prop)
+        # J_op = (2*np.pi * self._Va) / (Omega_p*MAV.D_prop)
         
         # thrust and torque due to propeller
-        CT = MAV.C_T0 + MAV.C_T1 * J_op + MAV.C_T2 * J_op**2
-        CQ = MAV.C_Q0 + MAV.C_Q1 * J_op + MAV.C_Q2 * J_op**2
+        # CT = MAV.C_T0 + MAV.C_T1 * J_op + MAV.C_T2 * J_op**2
+        # CQ = MAV.C_Q0 + MAV.C_Q1 * J_op + MAV.C_Q2 * J_op**2
         
         # Based on the pdf Book
         # thrust_prop = MAV.rho * (Omega_p/(2*np.pi)**2) * MAV.D_prop**4 * CT
@@ -250,6 +250,10 @@ class MavDynamics(MavDynamicsForces):
         self.true_state.north = self._state.item(0)
         self.true_state.east = self._state.item(1)
         self.true_state.altitude = -self._state.item(2)
+        
+        self.true_state.u = self._state.item(3)
+        self.true_state.v = self._state.item(4)
+        self.true_state.w = self._state.item(5)
         
         self.true_state.Va = self._Va
         self.true_state.alpha = self._alpha

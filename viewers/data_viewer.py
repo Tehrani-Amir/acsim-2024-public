@@ -23,6 +23,8 @@ class DataViewer:
         self._dt = dt
         self._data_window_length= time_window_length / data_recording_period
         self._update_counter = 0
+        
+        # Number of polts in each Row
         self._plots_per_row = 4
         
         self._plotter = Plotter(app=app, plots_per_row=self._plots_per_row)  # plot last time_window seconds of data
@@ -52,12 +54,15 @@ class DataViewer:
                                        window_length=self._data_window_length)
         
         self._plotter.create_data_set(plot_id="pn", data_label="pn", data_color=truth_color)
-        self._plotter.create_data_set(plot_id="pn", data_label="pn_e", data_color=estimate_color) 
+        self._plotter.create_data_set(plot_id="pn", data_label="pn_e", data_color=estimate_color)
+        
         self._plotter.create_data_set(plot_id="pe", data_label="pe", data_color=truth_color)
         self._plotter.create_data_set(plot_id="pe", data_label="pe_e", data_color=estimate_color)
+        
         self._plotter.create_data_set(plot_id="h", data_label="h", data_color=truth_color)
-        self._plotter.create_data_set(plot_id="h", data_label="h_e", data_color=estimate_color)
         self._plotter.create_data_set(plot_id="h", data_label="h_c", data_color=control_color)
+        self._plotter.create_data_set(plot_id="h", data_label="h_e", data_color=estimate_color)
+
         self._plotter.create_data_set(plot_id="wind", data_label="wn", data_color=truth_color)
         self._plotter.create_data_set(plot_id="wind", data_label="wn_e", data_color=estimate_color)
         self._plotter.create_data_set(plot_id="wind", data_label="we", data_color=truth_color_2)
@@ -74,12 +79,17 @@ class DataViewer:
                                        window_length=self._data_window_length)
         
         self._plotter.create_data_set(plot_id="Va", data_label="Va", data_color=truth_color)
-        self._plotter.create_data_set(plot_id="Va", data_label="Va_e", data_color=estimate_color)
         self._plotter.create_data_set(plot_id="Va", data_label="Va_c", data_color=control_color)
+        self._plotter.create_data_set(plot_id="Va", data_label="Va_e", data_color=estimate_color)
+        
         self._plotter.create_data_set(plot_id="alpha", data_label="alpha", data_color=truth_color)
+        self._plotter.create_data_set(plot_id="alpha", data_label="alpha_c", data_color=control_color)
         self._plotter.create_data_set(plot_id="alpha", data_label="alpha_e", data_color=estimate_color)
+
         self._plotter.create_data_set(plot_id="beta", data_label="beta", data_color=truth_color)
+        self._plotter.create_data_set(plot_id="beta", data_label="beta_c", data_color=control_color)
         self._plotter.create_data_set(plot_id="beta", data_label="beta_e", data_color=estimate_color)
+               
         self._plotter.create_data_set(plot_id="Vg", data_label="Vg", data_color=truth_color)
         self._plotter.create_data_set(plot_id="Vg", data_label="Vg_e", data_color=estimate_color)
         
@@ -94,17 +104,20 @@ class DataViewer:
                                        window_length=self._data_window_length)
         
         self._plotter.create_data_set(plot_id="phi", data_label="phi", data_color=truth_color)
-        self._plotter.create_data_set(plot_id="phi", data_label="phi_e", data_color=estimate_color)
         self._plotter.create_data_set(plot_id="phi", data_label="phi_c", data_color=control_color)
+        self._plotter.create_data_set(plot_id="phi", data_label="phi_e", data_color=estimate_color)
+        
         self._plotter.create_data_set(plot_id="theta", data_label="theta", data_color=truth_color)
-        self._plotter.create_data_set(plot_id="theta", data_label="theta_e", data_color=estimate_color)
         self._plotter.create_data_set(plot_id="theta", data_label="theta_c", data_color=control_color)
+        self._plotter.create_data_set(plot_id="theta", data_label="theta_e", data_color=estimate_color)
+        
         self._plotter.create_data_set(plot_id="psi", data_label="psi", data_color=truth_color)
-        self._plotter.create_data_set(plot_id="psi", data_label="psi_e", data_color=estimate_color)
         self._plotter.create_data_set(plot_id="psi", data_label="psi_c", data_color=control_color)
+        self._plotter.create_data_set(plot_id="psi", data_label="psi_e", data_color=estimate_color)
+        
         self._plotter.create_data_set(plot_id="chi", data_label="chi", data_color=truth_color)
-        self._plotter.create_data_set(plot_id="chi", data_label="chi_e", data_color=estimate_color)
         self._plotter.create_data_set(plot_id="chi", data_label="chi_c", data_color=control_color)
+        self._plotter.create_data_set(plot_id="chi", data_label="chi_e", data_color=estimate_color)
 
         # define fourth row
         self._plotter.create_plot_widget(plot_id="p", xlabel="Time (s)", ylabel="p (deg/s)",
@@ -118,10 +131,13 @@ class DataViewer:
                                        
         self._plotter.create_data_set(plot_id="p", data_label="p", data_color=truth_color)
         self._plotter.create_data_set(plot_id="p", data_label="p_e", data_color=estimate_color)
+        
         self._plotter.create_data_set(plot_id="q", data_label="q", data_color=truth_color)
         self._plotter.create_data_set(plot_id="q", data_label="q_e", data_color=estimate_color)
+        
         self._plotter.create_data_set(plot_id="r", data_label="r", data_color=truth_color)
         self._plotter.create_data_set(plot_id="r", data_label="r_e", data_color=estimate_color)
+        
         self._plotter.create_data_set(plot_id="bias", data_label="bx", data_color=truth_color)
         self._plotter.create_data_set(plot_id="bias", data_label="bx_e", data_color=estimate_color)
         self._plotter.create_data_set(plot_id="bias", data_label="by", data_color=truth_color_2)
@@ -143,7 +159,7 @@ class DataViewer:
         self._plotter.create_data_set(plot_id="delta_a", data_label="delta_a", data_color=control_color)
         self._plotter.create_data_set(plot_id="delta_r", data_label="delta_r", data_color=control_color)
         self._plotter.create_data_set(plot_id="delta_t", data_label="delta_t", data_color=control_color)
-                
+        
         # define sixth row
         self._plotter.create_plot_widget(plot_id="u", xlabel="Time (s)", ylabel="u (m/s)",
                                        window_length=self._data_window_length)
@@ -151,13 +167,19 @@ class DataViewer:
                                        window_length=self._data_window_length)
         self._plotter.create_plot_widget(plot_id="w", xlabel="Time (s)", ylabel="w (m/s)",
                                        window_length=self._data_window_length)
-        self._plotter.create_plot_widget(plot_id="blank", xlabel="Time (s)", ylabel="blank",
+        self._plotter.create_plot_widget(plot_id='gamma', xlabel='Time (s)', ylabel='gamma (deg)',
                                        window_length=self._data_window_length)
+        # self._plotter.create_plot_widget(plot_id="blank", xlabel="Time (s)", ylabel="blank",
+        #                                window_length=self._data_window_length)
         
-        self._plotter.create_data_set(plot_id="u", data_label="u", data_color=control_color)
-        self._plotter.create_data_set(plot_id="v", data_label="v", data_color=control_color)
-        self._plotter.create_data_set(plot_id="w", data_label="w", data_color=control_color)
-        self._plotter.create_data_set(plot_id="blank", data_label="blank", data_color=control_color)
+        self._plotter.create_data_set(plot_id="u", data_label="u", data_color=truth_color)
+        self._plotter.create_data_set(plot_id="v", data_label="v", data_color=truth_color)
+        self._plotter.create_data_set(plot_id="w", data_label="w", data_color=truth_color)
+        
+        self._plotter.create_data_set(plot_id="gamma", data_label="gamma", data_color=truth_color)
+        self._plotter.create_data_set(plot_id="gamma", data_label="gamma_c", data_color=control_color)
+        self._plotter.create_data_set(plot_id="gamma", data_label="gamma_e", data_color=estimate_color)
+        # self._plotter.create_data_set(plot_id="blank", data_label="blank", data_color=control_color)
 
         self._plotter.show_window()
 
@@ -180,9 +202,13 @@ class DataViewer:
         if commanded_state != None:
             self._plotter.add_data_point(plot_id="h", data_label="h_c", xvalue=t, yvalue=commanded_state.altitude)
             self._plotter.add_data_point(plot_id="Va", data_label="Va_c", xvalue=t, yvalue=commanded_state.Va)
+            self._plotter.add_data_point(plot_id="alpha", data_label="alpha_c", xvalue=t, yvalue=self.__rad_to_deg(commanded_state.alpha))
+            self._plotter.add_data_point(plot_id="beta", data_label="beta_c", xvalue=t, yvalue=self.__rad_to_deg(commanded_state.beta))
             self._plotter.add_data_point(plot_id="phi", data_label="phi_c", xvalue=t, yvalue=self.__rad_to_deg(commanded_state.phi))
             self._plotter.add_data_point(plot_id="theta", data_label="theta_c", xvalue=t, yvalue=self.__rad_to_deg(commanded_state.theta))
+            self._plotter.add_data_point(plot_id="psi", data_label="psi_c", xvalue=t, yvalue=self.__rad_to_deg(commanded_state.psi))            
             self._plotter.add_data_point(plot_id="chi", data_label="chi_c", xvalue=t, yvalue=self.__rad_to_deg(commanded_state.chi))
+            self._plotter.add_data_point(plot_id="gamma", data_label="gamma_c", xvalue=t, yvalue=self.__rad_to_deg(commanded_state.gamma))
             
         #add the true state data
         if true_state != None:
@@ -192,37 +218,40 @@ class DataViewer:
             
             self._plotter.add_data_point(plot_id="Va", data_label="Va", xvalue=t, yvalue=true_state.Va)
             self._plotter.add_data_point(plot_id="alpha", data_label="alpha", xvalue=t, yvalue=self.__rad_to_deg(true_state.alpha))
-            self._plotter.add_data_point(plot_id="beta", data_label="beta", xvalue=t, yvalue=true_state.beta)
-            
+            self._plotter.add_data_point(plot_id="beta", data_label="beta", xvalue=t, yvalue=self.__rad_to_deg(true_state.beta))
+            self._plotter.add_data_point(plot_id="Vg", data_label="Vg", xvalue=t, yvalue=true_state.Vg)
+
             self._plotter.add_data_point(plot_id="phi", data_label="phi", xvalue=t, yvalue=self.__rad_to_deg(true_state.phi))
             self._plotter.add_data_point(plot_id="theta", data_label="theta", xvalue=t, yvalue=self.__rad_to_deg(true_state.theta))
             self._plotter.add_data_point(plot_id="psi", data_label="psi", xvalue=t, yvalue=self.__rad_to_deg(true_state.psi))
             self._plotter.add_data_point(plot_id="chi", data_label="chi", xvalue=t, yvalue=self.__rad_to_deg(true_state.chi))
+            
             self._plotter.add_data_point(plot_id="p", data_label="p", xvalue=t, yvalue=self.__rad_to_deg(true_state.p))
             self._plotter.add_data_point(plot_id="q", data_label="q", xvalue=t, yvalue=self.__rad_to_deg(true_state.q))
             self._plotter.add_data_point(plot_id="r", data_label="r", xvalue=t, yvalue=self.__rad_to_deg(true_state.r))
-            self._plotter.add_data_point(plot_id="Vg", data_label="Vg", xvalue=t, yvalue=true_state.Vg)
+            
+            self._plotter.add_data_point(plot_id="u", data_label="u", xvalue=t, yvalue=true_state.u)
+            self._plotter.add_data_point(plot_id="v", data_label="v", xvalue=t, yvalue=true_state.v)
+            self._plotter.add_data_point(plot_id="w", data_label="w", xvalue=t, yvalue=true_state.w)
+            self._plotter.add_data_point(plot_id="gamma", data_label="gamma", xvalue=t, yvalue=self.__rad_to_deg(true_state.gamma))
+            
             self._plotter.add_data_point(plot_id="wind", data_label="wn", xvalue=t, yvalue=true_state.wn)
             self._plotter.add_data_point(plot_id="wind", data_label="we", xvalue=t, yvalue=true_state.we)
             self._plotter.add_data_point(plot_id="bias", data_label="bx", xvalue=t, yvalue=self.__rad_to_deg(true_state.bx))
             self._plotter.add_data_point(plot_id="bias", data_label="by", xvalue=t, yvalue=self.__rad_to_deg(true_state.by))
             self._plotter.add_data_point(plot_id="bias", data_label="bz", xvalue=t, yvalue=self.__rad_to_deg(true_state.bz))
             
-            # update the newly defined plot for sixth row ([u,v,w])
-            self._plotter.add_data_point(plot_id="u", data_label="u", xvalue=t, yvalue=true_state.u)
-            self._plotter.add_data_point(plot_id="v", data_label="v", xvalue=t, yvalue=true_state.v)
-            self._plotter.add_data_point(plot_id="w", data_label="w", xvalue=t, yvalue=true_state.w)
-            
         #add the estimated state data
         if estimated_state != None:
             self._plotter.add_data_point(plot_id="pn", data_label="pn_e", xvalue=t, yvalue=estimated_state.north)
             self._plotter.add_data_point(plot_id="pe", data_label="pe_e", xvalue=t, yvalue=estimated_state.east)
             self._plotter.add_data_point(plot_id="h", data_label="h_e", xvalue=t, yvalue=estimated_state.altitude)
-            self._plotter.add_data_point(plot_id="Va", data_label="Va_e", xvalue=t, yvalue=estimated_state.Va)
-
-            self._plotter.add_data_point(plot_id="alpha", data_label="alpha_e", xvalue=t, yvalue=self.__rad_to_deg(estimated_state.alpha))
-            self._plotter.add_data_point(plot_id="beta", data_label="beta_e", xvalue=t, yvalue=estimated_state.beta)
             
+            self._plotter.add_data_point(plot_id="Va", data_label="Va_e", xvalue=t, yvalue=estimated_state.Va)
+            self._plotter.add_data_point(plot_id="alpha", data_label="alpha_e", xvalue=t, yvalue=self.__rad_to_deg(estimated_state.alpha))
+            self._plotter.add_data_point(plot_id="beta", data_label="beta_e", xvalue=t, yvalue=self.__rad_to_deg(estimated_state.beta))
+            self._plotter.add_data_point(plot_id="Vg", data_label="Vg_e", xvalue=t, yvalue=estimated_state.Vg)
+
             self._plotter.add_data_point(plot_id="phi", data_label="phi_e", xvalue=t, yvalue=self.__rad_to_deg(estimated_state.phi))
             self._plotter.add_data_point(plot_id="theta", data_label="theta_e", xvalue=t, yvalue=self.__rad_to_deg(estimated_state.theta))
             self._plotter.add_data_point(plot_id="psi", data_label="psi_e", xvalue=t, yvalue=self.__rad_to_deg(estimated_state.psi))
@@ -232,7 +261,9 @@ class DataViewer:
             self._plotter.add_data_point(plot_id="q", data_label="q_e", xvalue=t, yvalue=self.__rad_to_deg(estimated_state.q))
             self._plotter.add_data_point(plot_id="r", data_label="r_e", xvalue=t, yvalue=self.__rad_to_deg(estimated_state.r))
             
-            self._plotter.add_data_point(plot_id="Vg", data_label="Vg_e", xvalue=t, yvalue=estimated_state.Vg)
+            # self._plotter.add_data_point(plot_id="u", data_label="u_e", xvalue=t, yvalue=estimated_state.u)
+            # self._plotter.add_data_point(plot_id="v", data_label="v_e", xvalue=t, yvalue=estimated_state.v)
+            # self._plotter.add_data_point(plot_id="w", data_label="w_e", xvalue=t, yvalue=estimated_state.w)
             
             self._plotter.add_data_point(plot_id="wind", data_label="wn_e", xvalue=t, yvalue=estimated_state.wn)
             self._plotter.add_data_point(plot_id="wind", data_label="we_e", xvalue=t, yvalue=estimated_state.we)

@@ -34,7 +34,7 @@ class MsgState:
         
         self.wn = 0.            # inertial windspeed in north direction in meters/sec
         self.we = 0.            # inertial windspeed in east direction in meters/sec
-        # why we don't have wd
+        self.wd = 0.
         
         self.bx = 0.            # gyro bias along roll axis in radians/sec
         self.by = 0.            # gyro bias along pitch axis in radians/sec

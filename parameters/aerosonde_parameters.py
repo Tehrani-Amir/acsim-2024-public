@@ -7,7 +7,7 @@ from tools.rotations import euler_to_quaternion
 # Define the Initial conditions for MAV
 north0 = 0.     # initial north position
 east0 = 0.      # initial east position
-down0 = -100.0  # initial down position
+down0 = -100.0  # initial down position -(0.3048*500 ft)
 
 u0 = 25         # initial velocity along body x-axis
 v0 = 0.0        # initial velocity along body y-axis

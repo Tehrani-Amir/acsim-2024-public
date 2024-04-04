@@ -55,68 +55,72 @@ if PLOTS:
 wind = WindSimulation(SIM.ts_simulation)
 mav = MavDynamics(SIM.ts_simulation)
 delta = MsgDelta()
+delta = do_trim(mav, Va=25, alpha= 0)
 
-delta = do_trim(mav, Va=30, alpha= 0)
-
+# autopilot
 autopilot = Autopilot(ts_control=SIM.ts_simulation, mav=mav, delta=delta)
 
-# autopilot commands
+# autopilot commands (Desired States)
 from message_types.msg_autopilot import MsgAutopilot
-
 commands = MsgAutopilot()
+commands.airspeed_command = 25
+commands.altitude_command = 100
+commands.course_command = np.deg2rad(0)
 
 Va_command = Signals(dc_offset=25.0,
-                     amplitude=3.0,
-                     start_time=2.0,
-                     frequency=0.01)
+                     amplitude=5.0,
+                     start_time=4.0,
+                     frequency=0.05)
 
 altitude_command = Signals(dc_offset=100.0,
                            amplitude=20.0,
-                           start_time=0.0,
-                           frequency=0.02)
+                           start_time=4.0,
+                           frequency=0.05)
 
 course_command = Signals(dc_offset=np.radians(180),
                          amplitude=np.radians(45),
-                         start_time=5.0,
+                         start_time=4.0,
                          frequency=0.015)
+
+# input_signal = Signals(amplitude=0.5, duration=0.3, start_time=4.0)
 
 # initialize the simulation time
 sim_time = SIM.start_time
 end_time = 100
 
-# this signal will be used to excite modes
-input_signal = Signals(amplitude=0.5, duration=0.3, start_time=4.0)
-
 # main simulation loop
 print("Press 'Esc' to exit...")
+
 while sim_time < end_time:
 
-    # -------autopilot commands-------------
+    ################### autopilot commands ###################
     commands.airspeed_command = Va_command.square(sim_time)
-    commands.course_command = course_command.square(sim_time)
-    commands.altitude_command = altitude_command.square(sim_time)
-
-    # -------autopilot-------------
-    estimated_state = mav.true_state  # uses true states in the control
+    # commands.course_command = course_command.square(sim_time)
+    # commands.altitude_command = altitude_command.square(sim_time)
+    
+    ## excitation using impulse/doublet function
+    # delta.rudder = delta.rudder + input_signal.impulse(time=sim_time)
+    # delta.elevator = delta.elevator + input_signal.impulse(time=sim_time)
+    # delta.throttle = delta.throttle + input_signal.impulse(time=sim_time)
+    
+    ######################## autopilot ########################
+    estimated_state = mav.true_state        # uses true states in the control
     delta, commanded_state = autopilot.update(commands, estimated_state)
     
-    # excitation using impulse/doublet function
-    # delta.rudder = delta.rudder + input_signal.impulse(time=sim_time)
-    delta.rudder = delta.rudder + input_signal.impulse(time=sim_time)
+    ###################### phusical system #####################
+    current_wind = wind.update()            # get the new wind vector
+    mav.update(delta, current_wind)         # propagate the MAV dynamics
+    # delta = do_trim(mav, commanded_state.Va, commanded_state.alpha)         # update the trim conditions
 
-    # -------physical system-------------
-    current_wind = wind.update()  # get the new wind vector
-    mav.update(delta, current_wind)  # propagate the MAV dynamics
-
-    # ------- animation -------
+    ######################### animation ########################
     if ANIMATION:
-        mav_view.update(mav.true_state)  # plot body of MAV
+        mav_view.update(mav.true_state)     # plot body of MAV
     if PLOTS:
         plot_time = sim_time
-        data_view.update(mav.true_state,  # true states
-                            None,  # estimated states
-                            commanded_state,  # commanded states
-                            delta)  # inputs to aircraft
+        data_view.update(mav.true_state,    # true states
+                         None,              # estimated states
+                         commanded_state,   # commanded states
+                         delta)             # inputs to aircraft
     if ANIMATION or PLOTS:
         app.processEvents()
     if VIDEO is True:
@@ -134,4 +138,3 @@ if SAVE_PLOT_IMAGE:
 
 if VIDEO is True:
     video.close()
-
