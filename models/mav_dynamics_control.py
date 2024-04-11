@@ -243,10 +243,7 @@ class MavDynamics(MavDynamicsForces):
 
     def _update_true_state(self):
         # rewrite this function because we now have more information
-        phi, theta, psi = quaternion_to_euler(self._state[6:10])
-        
-        pdot = quaternion_to_rotation(self._state[6:10]) @ self._state[3:6]
-        
+
         self.true_state.north = self._state.item(0)
         self.true_state.east = self._state.item(1)
         self.true_state.altitude = -self._state.item(2)
@@ -254,23 +251,26 @@ class MavDynamics(MavDynamicsForces):
         self.true_state.u = self._state.item(3)
         self.true_state.v = self._state.item(4)
         self.true_state.w = self._state.item(5)
-        
-        self.true_state.Va = self._Va
-        self.true_state.alpha = self._alpha
-        self.true_state.beta = self._beta
-        
+
+        phi, theta, psi = quaternion_to_euler(self._state[6:10])
         self.true_state.phi = phi
         self.true_state.theta = theta
         self.true_state.psi = psi
         
-        self.true_state.Vg = np.linalg.norm(pdot)
-        self.true_state.gamma = np.arcsin(pdot.item(2) / self.true_state.Vg)
-        self.true_state.chi = np.arctan2(pdot.item(1), pdot.item(0))
-        
         self.true_state.p = self._state.item(10)
         self.true_state.q = self._state.item(11)
         self.true_state.r = self._state.item(12)
+                
+        self.true_state.Va = self._Va
+        self.true_state.alpha = self._alpha
+        self.true_state.beta = self._beta
         
+        pdot = quaternion_to_rotation(self._state[6:10]) @ self._state[3:6]        
+        self.true_state.Vg = np.linalg.norm(pdot)
+        
+        self.true_state.gamma = np.arcsin(-pdot.item(2) / self.true_state.Vg)
+        self.true_state.chi = np.arctan2(pdot.item(1), pdot.item(0))
+                
         self.true_state.wn = self._wind.item(0)
         self.true_state.we = self._wind.item(1)
         

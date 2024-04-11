@@ -18,7 +18,7 @@ from message_types.msg_state import MsgState
 from message_types.msg_delta import MsgDelta
 from models.mav_dynamics_control import MavDynamics
 
-## saturation limits
+################## saturation limits ######################
 alpha_min = np.radians(-2)
 alpha_max = np.radians(12)
 
@@ -28,44 +28,45 @@ gamma_max = np.radians(15)
 roll_min = np.radians(-45)
 roll_max = np.radians(+45)
 
-course_min = np.deg2rad(-180)
-course_max = np.deg2rad(+180)
+course_min = np.radians(-180)
+course_max = np.radians(+180)
 
-######### Longitudinal gains ##########
-## gains to regulate Va by throttle
-airspeed_throttle_kp = 0.05
-airspeed_throttle_ki = 0.05
+################## Longitudinal gains ######################
+# gains to regulate Va by throttle
+airspeed_throttle_kp = 0.03
+airspeed_throttle_ki = 0.02
 
-## gains to regulate alpha by elevator
+# gains to regulate alpha by elevator
 alpha_elevator_kp = -20
 alpha_elevator_ki = -20
-alpha_elevator_kd = -2
+alpha_elevator_kd = -3
 
-## gains to regulate gamma by alpha
-gamma_alpha_kp = 1.2
-gamma_alpha_ki = 1.0
-gamma_alpha_kd = 0.0
+# gains to regulate gamma by alpha/theta (Alpha/Theta Controller)
+gamma_alpha_kp = 1 
+gamma_alpha_ki = 0.5
+gamma_alpha_kd = 0.001 
 
-## gains to regulate altitude by gamma
-altitude_gamma_kp = 0.05
-altitude_gamma_ki = 0.01
-altitude_gamma_kd = 0.0001
+## gains to regulate altitude by gamma (Gamma Controller)
+altitude_gamma_kp = 0.15
+altitude_gamma_ki = 0.0
+altitude_gamma_kd = 0.05
 
-######### Lateral gains ##########
+###################### Lateral gains #######################
 ## gains to regulate beta by elevator
 yaw_damper_kp = 10.0
-yaw_damper_kd = 1.0
+yaw_damper_kd = 1.00
 
-# gains to regulate roll angle by ailerons
-roll_aileron_kp = 2 / roll_max
+# gains to regulate roll angle by ailerons (Roll Controller)
+roll_aileron_kp = 0.20
 roll_aileron_ki = 0.1
-roll_aileron_kd = 0.001*roll_aileron_kp 
+roll_aileron_kd = 0.01
 
-## gains to regulate course angle by roll angle
-course_roll_kp = roll_max/course_max
-course_roll_ki = 0.0000001
-course_roll_kd = 0.1*course_roll_kp
+## gains to regulate course angle by roll angle (Chi Controller)
+course_roll_kp = 1.0
+course_roll_ki = 0.1
+course_roll_kd = 0.01
 
+######################### Autopilot ########################
 
 class Autopilot:
     def __init__(self, ts_control, mav: MavDynamics, delta):
@@ -78,15 +79,15 @@ class Autopilot:
                                                 min = 0.0,
                                                 max = 1.0,
                                                 init_integrator = delta.throttle / airspeed_throttle_ki)
-        
-        # regulate alpha by elevator
-        self.elevator_from_alpha = PIDControl(kp = alpha_elevator_kp ,
-                                              ki = alpha_elevator_ki,
-                                              kd = alpha_elevator_kd,
+               
+        # regulate altitude by gamma (Altitude Controller)
+        self.gamma_from_altitude = PIDControl(kp = altitude_gamma_kp,
+                                              ki = altitude_gamma_ki,
+                                              kd = altitude_gamma_kd,
                                               Ts = ts_control,
-                                              min = -1.0,
-                                              max = +1.0,
-                                              init_integrator = delta.elevator / alpha_elevator_ki)
+                                              min = gamma_min, 
+                                              max= gamma_max,
+                                              init_integrator = 0.0)
         
         # regulate gamma by alpha (Gamma Controller)
         self.alpha_from_gamma = PIDControl(kp = gamma_alpha_kp ,
@@ -96,15 +97,15 @@ class Autopilot:
                                            min = alpha_min,
                                            max = alpha_max,
                                            init_integrator = mav.true_state.alpha / gamma_alpha_ki)
-       
-        # regulate altitude by gamma (Altitude Controller)
-        self.gamma_from_altitude = PIDControl(kp = altitude_gamma_kp,
-                                              ki = altitude_gamma_ki,
-                                              kd = altitude_gamma_kd,
+        
+        # regulate alpha by elevator (Alpha Controller)
+        self.elevator_from_alpha = PIDControl(kp = alpha_elevator_kp ,
+                                              ki = alpha_elevator_ki,
+                                              kd = alpha_elevator_kd,
                                               Ts = ts_control,
-                                              min = gamma_min, 
-                                              max= gamma_max,
-                                              init_integrator = 0.0)
+                                              min = -1.0,
+                                              max = +1.0,
+                                              init_integrator = delta.elevator / alpha_elevator_ki)
                
         ################################## Lateral Autopilots ################################
         # regulate beta by rudder
@@ -131,9 +132,6 @@ class Autopilot:
                                            max = roll_max,
                                            init_integrator = 0)
         
-        ###################################################################
-        self.commanded_state = MsgState()
-
     def update(self, commands, estimated_state): # cmd=command,state are the desired/command, current states
         
         ################################### TODO ###################################
@@ -150,16 +148,21 @@ class Autopilot:
         delta.rudder = self.yaw_damper.update(0, estimated_state.beta)
         cmd_roll = self.roll_from_course.update(commands.course_command, estimated_state.chi)
         delta.aileron = self.aileron_from_roll.update(cmd_roll, estimated_state.phi)
+ 
+        ############# construct control outputs and commanded states ################
+        self.commanded_state = MsgState()
         
-        ############################### Save Outputs ###############################
         self.commanded_state.altitude = commands.altitude_command
         self.commanded_state.Va = commands.airspeed_command
-        self.commanded_state.alpha = cmd_alpha
-        self.commanded_state.gamma = cmd_gamma
-        self.commanded_state.phi = cmd_roll
-        self.commanded_state.theta = cmd_alpha + cmd_gamma
         self.commanded_state.chi = commands.course_command
         
+        self.commanded_state.alpha = cmd_alpha
+        self.commanded_state.gamma = cmd_gamma
+        self.commanded_state.theta = cmd_alpha + cmd_gamma
+        
+        self.commanded_state.beta = 0.0
+        self.commanded_state.phi = cmd_roll
+
         return delta, self.commanded_state
 
     def saturate(self, input, low_limit, up_limit):
@@ -170,17 +173,3 @@ class Autopilot:
         else:
             output = input
         return output
-
-        ############# construct control outputs and commanded states ################
-        # self.commanded_state.Va = 30
-        # self.commanded_state.gamma = 0.0
-        # self.commanded_state.alpha = state.theta - self.commanded_state.gamma 
-        # self.commanded_state.beta = 0.0
-        # self.commanded_state.theta = state.theta #self.commanded_state.gamma + self.commanded_state.alpha
-        # # TS = 0.01
-        # self.commanded_state.altitude = state.altitude #self.commanded_state.Va * self.commanded_state.theta * TS
-        # self.commanded_state.chi = np.radians(90)
-        # coordintaed turn
-        # gravity = 9.81  # self.commanded_state.phi=np.radians(45)
-        # self.commanded_state.phi = np.arctan(self.commanded_state.Va * state.r \
-        #                                 / (gravity*np.cos(self.commanded_state.chi - state.psi)))
