@@ -13,20 +13,24 @@ sys.path.insert(0,os.fspath(Path(__file__).parents[2]))
 # use QuitListener for Linux or PC <- doesn't work on Mac
 #from tools.quit_listener import QuitListener
 import numpy as np
-import parameters.simulation_parameters as SIM
 import pyqtgraph as pg
+import parameters.simulation_parameters as SIM
 from tools.signals import Signals
-from models.mav_dynamics_sensors import MavDynamics
+from models.mav_dynamics_sensors2 import MavDynamics
 from models.wind_simulation import WindSimulation
 from controllers.autopilot import Autopilot
+# from controllers.autopilot_lqr import Autopilot
+# from controllers.autopilot_tecs import Autopilot
 from viewers.mav_viewer import MavViewer
 from viewers.data_viewer import DataViewer
 from viewers.sensor_viewer import SensorViewer
+from message_types.msg_delta import MsgDelta
+from mystuff.trim import do_trim
 
 #quitter = QuitListener()
 
 VIDEO = False
-DATA_PLOTS = False
+DATA_PLOTS = True
 SENSOR_PLOTS = True
 ANIMATION = True
 SAVE_PLOT_IMAGE = False
@@ -50,27 +54,36 @@ if SENSOR_PLOTS:
     sensor_view = SensorViewer(app=app,dt=SIM.ts_simulation, plot_period=SIM.ts_plot_refresh, 
                            data_recording_period=SIM.ts_plot_record_data, time_window_length=30)
 
-
 # initialize elements of the architecture
 wind = WindSimulation(SIM.ts_simulation)
 mav = MavDynamics(SIM.ts_simulation)
-autopilot = Autopilot(SIM.ts_simulation)
+delta = MsgDelta()
+delta = do_trim(mav, Va=25, alpha= 0)
+
+# autopilot = Autopilot(SIM.ts_simulation)
+autopilot = Autopilot(ts_control=SIM.ts_simulation, mav=mav, delta=delta)
 
 # autopilot commands
 from message_types.msg_autopilot import MsgAutopilot
 commands = MsgAutopilot()
+commands.airspeed_command = 25
+commands.altitude_command = 100
+commands.course_command = np.radians(0)
+
 Va_command = Signals(dc_offset=25.0,
                      amplitude=3.0,
                      start_time=2.0,
-                     frequency=0.01)
+                     frequency=0.05)
+
 altitude_command = Signals(dc_offset=100.0,
-                           amplitude=10.0,
-                           start_time=0.0,
-                           frequency=0.02)
-course_command = Signals(dc_offset=np.radians(180),
+                           amplitude=20.0,
+                           start_time=3.0,
+                           frequency=0.015)
+
+course_command = Signals(dc_offset=np.radians(0),
                          amplitude=np.radians(45),
                          start_time=5.0,
-                         frequency=0.015)
+                         frequency=0.1)
 
 # initialize the simulation time
 sim_time = SIM.start_time
@@ -78,31 +91,36 @@ end_time = 100
 
 # main simulation loop
 print("Press 'Esc' to exit...")
+
 while sim_time < end_time:
 
     # -------autopilot commands-------------
     commands.airspeed_command = Va_command.square(sim_time)
     commands.course_command = course_command.square(sim_time)
     commands.altitude_command = altitude_command.square(sim_time)
-
+    
+    commands.airspeed_command = 25
+    commands.altitude_command = 100
+    # commands.course_command = mav.true_state.chi
+    
     # -------autopilot-------------
-    measurements = mav.sensors()  # get sensor measurements
-    estimated_state = mav.true_state  # uses true states in the control
+    measurements = mav.sensors()        # get sensor measurements
+    estimated_state = mav.true_state    # uses true states in the control
     delta, commanded_state = autopilot.update(commands, estimated_state)
 
     # -------physical system-------------
-    current_wind = wind.update()  # get the new wind vector
-    mav.update(delta, current_wind)  # propagate the MAV dynamics
+    current_wind = wind.update()        # get the new wind vector
+    mav.update(delta, current_wind)     # propagate the MAV dynamics
 
     # -------update viewer-------------
     if ANIMATION:
-        mav_view.update(mav.true_state)  # plot body of MAV
+        mav_view.update(mav.true_state) # plot body of MAV
     if DATA_PLOTS:
         plot_time = sim_time
-        data_view.update(mav.true_state,  # true states
-                            None,  # estimated states
-                            commanded_state,  # commanded states
-                            delta)  # inputs to aircraft
+        data_view.update(mav.true_state,        # true states
+                            None,               # estimated states
+                            commanded_state,    # commanded states
+                            delta)              # inputs to aircraft
     if SENSOR_PLOTS:
         sensor_view.update(measurements)
 
@@ -115,8 +133,8 @@ while sim_time < end_time:
         video.update(sim_time)
         
     # -------Check to Quit the Loop-------
-    if quitter.check_quit():
-        break
+    # if quitter.check_quit():
+    #     break
 
     # -------increment time-------------
     sim_time += SIM.ts_simulation

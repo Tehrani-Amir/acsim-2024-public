@@ -31,8 +31,10 @@ mag_sigma = np.radians(0.03)
 #-------- 2017 GPS --------
 ts_gps = 0.2
 gps_k = 1. / 1100.  # 1 / s
+
 gps_n_sigma = 0.01
 gps_e_sigma = 0.01
 gps_h_sigma = 0.03
+
 gps_Vg_sigma = 0.005
 gps_course_sigma = gps_Vg_sigma / 20
