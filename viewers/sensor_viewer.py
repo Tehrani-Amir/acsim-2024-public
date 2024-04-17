@@ -43,6 +43,7 @@ class SensorViewer:
                                        window_length=self._data_window_length)
         self._plotter.create_plot_widget(plot_id='absolute_pressure', xlabel='Time (s)', ylabel='pressure(Pa)',
                                        window_length=self._data_window_length)
+        
         self._plotter.create_data_set(plot_id='gyro_x', data_label='gyro_x', data_color=gyro_color)
         self._plotter.create_data_set(plot_id='gyro_y', data_label='gyro_y', data_color=gyro_color) 
         self._plotter.create_data_set(plot_id='gyro_z', data_label='gyro_z', data_color=gyro_color)
@@ -57,6 +58,7 @@ class SensorViewer:
                                        window_length=self._data_window_length)
         self._plotter.create_plot_widget(plot_id='diff_pressure', xlabel='Time (s)', ylabel='pressure(Pa)',
                                        window_length=self._data_window_length)
+        
         self._plotter.create_data_set(plot_id='accel_x', data_label='accel_x', data_color=accelerometer_color)
         self._plotter.create_data_set(plot_id='accel_y', data_label='accel_y', data_color=accelerometer_color)
         self._plotter.create_data_set(plot_id='accel_z', data_label='accel_z', data_color=accelerometer_color)
@@ -71,6 +73,7 @@ class SensorViewer:
                                        window_length=self._data_window_length)
         self._plotter.create_plot_widget(plot_id='gps_Vg', xlabel='Time (s)', ylabel='gps_Vg(m/s)',
                                        window_length=self._data_window_length)
+        
         self._plotter.create_data_set(plot_id='gps_n', data_label='gps_n', data_color=gps_color)
         self._plotter.create_data_set(plot_id='gps_e', data_label='gps_e', data_color=gps_color)
         self._plotter.create_data_set(plot_id='gps_h', data_label='gps_h', data_color=gps_color)
@@ -79,7 +82,18 @@ class SensorViewer:
         # define fourth row
         self._plotter.create_plot_widget(plot_id='gps_course', xlabel='Time (s)', ylabel='gps_course (deg)',
                                        window_length=self._data_window_length)
+        self._plotter.create_plot_widget(plot_id='mag_x', xlabel='Time (s)', ylabel='mag_x',
+                                       window_length=self._data_window_length)
+        self._plotter.create_plot_widget(plot_id='mag_y', xlabel='Time (s)', ylabel='mag_y',
+                                       window_length=self._data_window_length)
+        self._plotter.create_plot_widget(plot_id='mag_z', xlabel='Time (s)', ylabel='mag_z',
+                                       window_length=self._data_window_length)
+        
         self._plotter.create_data_set(plot_id='gps_course', data_label='gps_course', data_color=gps_color)
+        self._plotter.create_data_set(plot_id='mag_x', data_label='mag_x', data_color=gps_color)
+        self._plotter.create_data_set(plot_id='mag_y', data_label='mag_y', data_color=gps_color)
+        self._plotter.create_data_set(plot_id='mag_z', data_label='mag_z', data_color=gps_color)
+
         self._plotter.show_window()
 
     def update(self, sensors):
@@ -99,15 +113,21 @@ class SensorViewer:
         self._plotter.add_data_point(plot_id='gyro_y', data_label='gyro_y', xvalue=t, yvalue=sensors.gyro_y)
         self._plotter.add_data_point(plot_id='gyro_z', data_label='gyro_z', xvalue=t, yvalue=sensors.gyro_z)
         self._plotter.add_data_point(plot_id='absolute_pressure', data_label='abs_pressure',xvalue=t, yvalue=sensors.abs_pressure)
+        
         self._plotter.add_data_point(plot_id='accel_x', data_label='accel_x', xvalue=t, yvalue=sensors.accel_x)
         self._plotter.add_data_point(plot_id='accel_y', data_label='accel_y', xvalue=t, yvalue=sensors.accel_y)
         self._plotter.add_data_point(plot_id='accel_z', data_label='accel_z', xvalue=t, yvalue=sensors.accel_z)
         self._plotter.add_data_point(plot_id='diff_pressure',   data_label='diff_pressure', xvalue=t, yvalue=sensors.diff_pressure)
+        
         self._plotter.add_data_point(plot_id='gps_n', data_label='gps_n', xvalue=t, yvalue=sensors.gps_n)
         self._plotter.add_data_point(plot_id='gps_e', data_label='gps_e', xvalue=t, yvalue=sensors.gps_e)
         self._plotter.add_data_point(plot_id='gps_h', data_label='gps_h', xvalue=t, yvalue=sensors.gps_h)
         self._plotter.add_data_point(plot_id='gps_Vg', data_label='gps_Vg', xvalue=t, yvalue=sensors.gps_Vg)
+        
         self._plotter.add_data_point(plot_id='gps_course', data_label='gps_course', xvalue=t, yvalue=self.__rad_to_deg(sensors.gps_course))
+        self._plotter.add_data_point(plot_id='mag_x', data_label='mag_x', xvalue=t, yvalue=self.__rad_to_deg(sensors.mag_x))
+        self._plotter.add_data_point(plot_id='mag_y', data_label='mag_y', xvalue=t, yvalue=self.__rad_to_deg(sensors.mag_y))
+        self._plotter.add_data_point(plot_id='mag_z', data_label='mag_z', xvalue=t, yvalue=self.__rad_to_deg(sensors.mag_z))
 
     def process_app(self):
         self._plotter.process_app(0)
