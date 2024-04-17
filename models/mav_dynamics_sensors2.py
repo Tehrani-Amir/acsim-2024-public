@@ -128,15 +128,43 @@ class MavDynamics(MavDynamicsForces):
         self._sensors.accel_y = self.current_forces_moments[1][0] / MAV.mass - MAV.gravity * np.cos(self.true_state.theta)*np.sin(self.true_state.phi) + np.random.normal(0, SENSOR.accel_sigma)
         self._sensors.accel_z = self.current_forces_moments[2][0] / MAV.mass - MAV.gravity * np.cos(self.true_state.theta)*np.cos(self.true_state.phi) + np.random.normal(0, SENSOR.accel_sigma)
 
-        # simulate magnetometers
-        # magnetic field in provo has magnetic declination of 12.5 degrees
-        # and magnetic inclination of 66 degrees
-        self._sensors.mag_x = self.true_state.psi + np.random.normal(0, SENSOR.mag_sigma) + SENSOR.mag_beta
-        self._sensors.mag_y = self.true_state.psi + np.random.normal(0, SENSOR.mag_sigma) + SENSOR.mag_beta
-        self._sensors.mag_z = self.true_state.psi + np.random.normal(0, SENSOR.mag_sigma) + SENSOR.mag_beta
+        # simulate magnetometers                
+        # The magnetic inclination is the angle between the earth's surface and the magnetic field lines. 
+        # Magnetic declination is the angle between the magnetic north of the compass and the true north.
+        
+        # Tulsa Magnetic inclination of 64 °degrees
+        # Tulsa Magnetic declination of 2 °degrees
+        # Tulsa Magnetic Strength of 50046 nT (nano-tesla)
+        Magnetic_field_strength = 50046.60
+        Magnetic_Declination = + np.radians(2)
+        Magnetic_Inclination = + np.radians(64)
+        
+        M_h = np.sin(Magnetic_Inclination) * Magnetic_field_strength
+        
+        M_n = np.cos(self.true_state.psi - Magnetic_Declination) * M_h
+        M_e = np.sin(self.true_state.psi - Magnetic_Declination) * M_h
+        M_d = np.cos(Magnetic_Inclination) * Magnetic_field_strength
+        
+        m0_v1 = np.array([M_n, M_e, M_d])
+        
+        # Rotation Matrix from Body to Inertial Reference Frame
+        R_b_v1 = euler_to_rotation(self.true_state.phi, self.true_state.theta, 0)        
+        R_inv = np.linalg.inv(R_b_v1)
+        m0_b = np.dot(R_inv, m0_v1)
+        
+        self._sensors.mag_x = m0_b[0] + np.random.normal(0, SENSOR.mag_sigma) # + SENSOR.mag_beta
+        self._sensors.mag_y = m0_b[1] + np.random.normal(0, SENSOR.mag_sigma) # + SENSOR.mag_beta
+        self._sensors.mag_z = m0_b[2] + np.random.normal(0, SENSOR.mag_sigma) # + SENSOR.mag_beta
 
         # simulate pressure sensors
-        self._sensors.abs_pressure = MAV.rho * MAV.gravity * self.true_state.altitude + np.random.normal(0, SENSOR.abs_pres_sigma)
+        P0 = 101325   # Standard Pressure at Sea Level (Pa=N/m^2)
+        T0 = 288.15   # Standard Temperature at Sea Level (Kelvin)
+        L0 = -0.0065  # the Laps Rate, Rate of Temperature Decrease in the lower atmposphere (K/m)
+        R = 8.31432   # Universal gas Constant for Air (N.m/mol.K)
+        M = 0.0289644 # Standard Molar Mass of Atmosphere Air
+        
+        P = P0 * (1 -(L0 * self.true_state.altitude / T0))**(MAV.gravity * M / (R*L0))
+        self._sensors.abs_pressure = P + np.random.normal(0, SENSOR.abs_pres_sigma)
         self._sensors.diff_pressure = 0.5 * MAV.rho * self.true_state.Va**2 + np.random.normal(0, SENSOR.diff_pres_sigma)
                 
         # simulate GPS sensor
@@ -149,7 +177,6 @@ class MavDynamics(MavDynamicsForces):
             self._sensors.gps_e = self.true_state.east + self._gps_eta_e
             self._sensors.gps_h = self.true_state.altitude + self._gps_eta_h
             
-            
             self._sensors.gps_Vg = np.sqrt((self.true_state.Va * np.cos(self.true_state.psi) + self.true_state.wn)**2 + (self.true_state.Va * np.sin(self.true_state.psi) + self.true_state.we)**2) + np.random.normal(0, SENSOR.gps_Vg_sigma)
             self._sensors.gps_course = np.arctan2(self.true_state.Va * np.sin(self.true_state.psi) + self.true_state.we , 
                                                   self.true_state.Va * np.cos(self.true_state.psi) + self.true_state.wn) + np.random.normal(0, SENSOR.gps_course_sigma)
@@ -158,9 +185,6 @@ class MavDynamics(MavDynamicsForces):
         else:
             self._t_gps += self._ts_simulation
         return self._sensors
-
-    # def external_set_state(self, new_state):
-    #     self._state = new_state
 
     #################################################################
 

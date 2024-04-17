@@ -99,8 +99,8 @@ while sim_time < end_time:
     commands.course_command = course_command.square(sim_time)
     commands.altitude_command = altitude_command.square(sim_time)
     
-    commands.airspeed_command = 25
-    commands.altitude_command = 100
+    # commands.airspeed_command = 25
+    # commands.altitude_command = 100
     # commands.course_command = mav.true_state.chi
     
     # -------autopilot-------------
