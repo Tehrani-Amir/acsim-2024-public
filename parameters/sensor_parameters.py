@@ -20,15 +20,6 @@ mag_beta = np.radians(1.0)
 mag_sigma = np.radians(0.03)
 
 # #-------- GPS --------
-# ts_gps = 1.0
-# gps_k = 1. / 1100.  # 1 / s
-# gps_n_sigma = 0.21
-# gps_e_sigma = 0.21
-# gps_h_sigma = 0.40
-# gps_Vg_sigma = 0.05
-# gps_course_sigma = gps_Vg_sigma / 10
-
-#-------- 2017 GPS --------
 ts_gps = 0.2
 gps_k = 1. / 1100.  # 1 / s
 

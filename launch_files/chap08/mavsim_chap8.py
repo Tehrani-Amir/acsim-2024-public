@@ -20,11 +20,13 @@ from tools.signals import Signals
 from models.mav_dynamics_sensors import MavDynamics
 from models.wind_simulation import WindSimulation
 from controllers.autopilot import Autopilot
-from estimation.observer import Observer
+from estimators.observer import Observer
 # from estimation.observer_full import Observer
 from viewers.mav_viewer import MavViewer
 from viewers.data_viewer import DataViewer
 from viewers.sensor_viewer import SensorViewer
+from message_types.msg_delta import MsgDelta
+from mystuff.trim import do_trim
 
 #quitter = QuitListener()
 
@@ -57,24 +59,32 @@ if SENSOR_PLOTS:
 # initialize elements of the architecture
 wind = WindSimulation(SIM.ts_simulation)
 mav = MavDynamics(SIM.ts_simulation)
-autopilot = Autopilot(SIM.ts_simulation)
+delta = MsgDelta()
+delta = do_trim(mav, Va=25, alpha= 0)
+autopilot = Autopilot(ts_control=SIM.ts_simulation, mav=mav, delta=delta) 
 observer = Observer(SIM.ts_simulation)
 
 # autopilot commands
 from message_types.msg_autopilot import MsgAutopilot
 commands = MsgAutopilot()
+commands.airspeed_command = 25
+commands.altitude_command = 100
+commands.course_command = np.radians(0)
+
 Va_command = Signals(dc_offset=25.0,
                      amplitude=3.0,
                      start_time=2.0,
-                     frequency = 0.01)
-h_command = Signals(dc_offset=100.0,
-                    amplitude=20.0,
-                    start_time=0.0,
-                    frequency=0.02)
-chi_command = Signals(dc_offset=np.radians(0.0),
-                      amplitude=np.radians(45.0),
-                      start_time=10.0,
-                      frequency=0.015)
+                     frequency = 0.05)
+
+altitude_command = Signals(dc_offset=100.0,
+                           amplitude=20.0,
+                           start_time=3.0,
+                           frequency=0.015)
+
+course_command = Signals(dc_offset=np.radians(0),
+                         amplitude=np.radians(45),
+                         start_time=5.0,
+                         frequency=0.1)
 
 # initialize the simulation time
 sim_time = SIM.start_time
@@ -82,16 +92,19 @@ end_time = 100
 
 # main simulation loop
 print("Press 'Esc' to exit...")
+
 while sim_time < end_time:
 
     # -------autopilot commands-------------
     commands.airspeed_command = Va_command.polynomial(sim_time)
-    commands.course_command = chi_command.polynomial(sim_time)
-    commands.altitude_command = h_command.polynomial(sim_time)
+    commands.course_command = course_command.polynomial(sim_time)
+    commands.altitude_command = altitude_command.polynomial(sim_time)
 
     # -------- autopilot -------------
     measurements = mav.sensors()  # get sensor measurements
+    # estimated_state = mav.true_state 
     estimated_state = observer.update(measurements)  # estimate states from measurements
+    
     delta, commanded_state = autopilot.update(commands, estimated_state)
 
     # -------- physical system -------------
@@ -130,7 +143,3 @@ if SAVE_PLOT_IMAGE:
 
 if VIDEO is True:
     video.close()
-
-
-
-
