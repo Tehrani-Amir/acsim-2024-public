@@ -32,7 +32,7 @@ from mystuff.trim import do_trim
 
 VIDEO = False
 DATA_PLOTS = True
-SENSOR_PLOTS = False
+SENSOR_PLOTS = True
 ANIMATION = True
 SAVE_PLOT_IMAGE = False
 COMPUTE_MODEL = False
@@ -72,7 +72,7 @@ commands.altitude_command = 100
 commands.course_command = np.radians(0)
 
 Va_command = Signals(dc_offset=25.0,
-                     amplitude=3.0,
+                     amplitude=5.0,
                      start_time=2.0,
                      frequency = 0.05)
 
@@ -118,7 +118,7 @@ while sim_time < end_time:
         plot_time = sim_time
         data_view.update(mav.true_state,  # true states
                          estimated_state,  # estimated states
-                         None,  # commanded states
+                         commanded_state,  # commanded states
                          delta)  # inputs to aircraft
     if SENSOR_PLOTS:
         sensor_view.update(measurements)

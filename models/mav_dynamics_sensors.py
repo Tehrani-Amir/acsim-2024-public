@@ -160,7 +160,7 @@ class MavDynamics(MavDynamicsForces):
         psi_out = psi_mag + Magnetic_Declination
         # print(np.rad2deg(psi_out)-np.rad2deg(self.true_state.psi))
         
-        # simulate pressure sensors
+        # simulate pressure sensors Based on Dr. Hook Formula
         P0 = 101325   # Standard Pressure at Sea Level (Pa=N/m^2)
         T0 = 288.15   # Standard Temperature at Sea Level (Kelvin)
         L0 = -0.0065  # the Laps Rate, Rate of Temperature Decrease in the lower atmposphere (K/m)

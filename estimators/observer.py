@@ -37,6 +37,12 @@ class Observer:
         self.lpf_abs = AlphaFilter(alpha=0.5, y0=initial_measurements.abs_pressure)
         self.lpf_diff = AlphaFilter(alpha=0.5, y0=initial_measurements.diff_pressure)
         
+        # LPF for estimate pn, pe, Vg, course
+        # self.lpf_gps_n = AlphaFilter(alpha=0.7, y0=initial_measurements.gps_n)
+        # self.lpf_gps_e = AlphaFilter(alpha=0.7, y0=initial_measurements.gps_e)
+        # self.lpf_gps_Vg = AlphaFilter(alpha=0.7, y0=initial_measurements.gps_Vg)
+        # self.lpf_gps_course = AlphaFilter(alpha=0.7, y0=initial_measurements.gps_course)
+
         ######################### Extended Kalman Filter #########################
         # EKF for estimate xhat = [phi and theta]
         self.attitude_ekf = EkfAttitude()
@@ -65,13 +71,20 @@ class Observer:
         self.estimated_state.altitude = (T0/L0) * (1- (P/P0)**((R*L0)/(MAV.gravity*M)))
         # self.estimated_state.altitude = (P0 - P) / (MAV.rho * MAV.gravity)
         self.estimated_state.Va = np.sqrt((2.0 / MAV.rho) * self.lpf_diff.update(measurement.diff_pressure))
-                
+        
         ############################## EKF Update ################################
         # update phi, theta estimation with simple EKF
         self.attitude_ekf.update(measurement, self.estimated_state)
 
         # update pn, pe, Vg, chi, wn, we, psi estimation with simple EKF
         self.position_ekf.update(measurement, self.estimated_state)
+        
+        # self.estimated_state.phi = np.arctan2(self.lpf_accel_y.update(measurement.accel_y), self.lpf_accel_z.update(measurement.accel_z))
+        # self.estimated_state.theta = np.arcsin(self.lpf_accel_y.update(measurement.accel_y) / MAV.gravity)
+        # self.estimated_state.north = self.lpf_gps_n.update(measurement.gps_pn)
+        # self.estimated_state.east = self.lpf_gps_e.update(measurement.gps_pe)
+        # self.estimated_state.Vg = self.lpf_gps_Vg.update(measurement.gps_Vg)
+        # self.estimated_state.chi = self.lpf_gps_course.update(measurement.gps_course)
 
         self.estimated_state.altitude = true_state.altitude
         # NOT estimating these parameters
