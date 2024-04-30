@@ -103,7 +103,7 @@ while sim_time < end_time:
     # -------- autopilot -------------
     measurements = mav.sensors()  # get sensor measurements
     # estimated_state = mav.true_state 
-    estimated_state = observer.update(measurements)  # estimate states from measurements
+    estimated_state = observer.update(measurements, mav.true_state)  # estimate states from measurements
     
     delta, commanded_state = autopilot.update(commands, estimated_state)
 

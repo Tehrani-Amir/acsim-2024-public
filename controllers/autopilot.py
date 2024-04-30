@@ -156,6 +156,7 @@ class Autopilot:
         self.commanded_state.Va = commands.airspeed_command
         self.commanded_state.chi = commands.course_command
         
+        
         self.commanded_state.alpha = cmd_alpha
         self.commanded_state.gamma = cmd_gamma
         self.commanded_state.theta = cmd_alpha + cmd_gamma

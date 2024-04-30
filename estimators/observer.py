@@ -20,13 +20,13 @@ class Observer:
         # use alpha filters to low pass filter gyros and accels
         # initialized estimated state message
         self.estimated_state = MsgState()
-
+                
         ################################ Low-Pass Filter #########################
         # TODO: tune α =alpha. If u is noisy α_lpf should be close to unity 
         # LPF for estimate p, q, r 
-        self.lpf_gyro_x = AlphaFilter(alpha=0.9, y0=initial_measurements.gyro_x)
-        self.lpf_gyro_y = AlphaFilter(alpha=0.9, y0=initial_measurements.gyro_y)
-        self.lpf_gyro_z = AlphaFilter(alpha=0.9, y0=initial_measurements.gyro_z)
+        self.lpf_gyro_x = AlphaFilter(alpha=0.7, y0=initial_measurements.gyro_x)
+        self.lpf_gyro_y = AlphaFilter(alpha=0.7, y0=initial_measurements.gyro_y)
+        self.lpf_gyro_z = AlphaFilter(alpha=0.7, y0=initial_measurements.gyro_z)
         
         # LPF for theta, phi estimation
         self.lpf_accel_x = AlphaFilter(alpha=0.8, y0=initial_measurements.accel_x)
@@ -43,9 +43,10 @@ class Observer:
         
         # EKF for estimate xhat = [pn, pe, Vg, chi, wn, we, psi]
         self.position_ekf = EkfPosition()
+        # self.position_ekf.xhat = np.array([[initial_measurements.gps_n], [initial_measurements.gps_e], [initial_measurements.gps_Vg], [initial_measurements.gps_course], [0.0], [0.0], [initial_measurements.gps_course]])
 
     ################################### UpDATE ###################################
-    def update(self, measurement):
+    def update(self, measurement, true_state):
 
         ############################## LPF Update ################################
         # update p, q, r estimation with simple LPF of gyro minus bias
@@ -60,8 +61,9 @@ class Observer:
         L0 = -0.0065  # Rate of Temperature Decrease (K/m)
         R = 8.31432   # Universal gas Constant for Air (N.m/mol.K)
         M = 0.0289644 # Standard Molar Mass of Atmosphere Air
-                
-        self.estimated_state.altitude = (T0/L0) * (1- (P/P0) ** ((R * L0) / (MAV.gravity * M)))
+                        
+        self.estimated_state.altitude = (T0/L0) * (1- (P/P0)**((R*L0)/(MAV.gravity*M)))
+        # self.estimated_state.altitude = (P0 - P) / (MAV.rho * MAV.gravity)
         self.estimated_state.Va = np.sqrt((2.0 / MAV.rho) * self.lpf_diff.update(measurement.diff_pressure))
                 
         ############################## EKF Update ################################
@@ -71,13 +73,15 @@ class Observer:
         # update pn, pe, Vg, chi, wn, we, psi estimation with simple EKF
         self.position_ekf.update(measurement, self.estimated_state)
 
+        self.estimated_state.altitude = true_state.altitude
         # NOT estimating these parameters
-        self.estimated_state.alpha = 0.0
-        self.estimated_state.beta = 0.0
+        self.estimated_state.gamma = true_state.gamma
+        self.estimated_state.alpha = true_state.alpha
+        self.estimated_state.beta = true_state.beta
         
-        self.estimated_state.bx = 0.0
-        self.estimated_state.by = 0.0
-        self.estimated_state.bz = 0.0
+        self.estimated_state.bx = true_state.bx
+        self.estimated_state.by = true_state.by
+        self.estimated_state.bz = true_state.bz
         
         return self.estimated_state
 
@@ -98,14 +102,14 @@ class EkfAttitude:
     # continous-discrete EKF to estimate xhat=[phi, theta] given state=[p, q, r, Va]
 
     def __init__(self): 
-         # Process noise covariance matrix 2x2
-        self.Q = np.eye(2) * 1e-3
+         # Process noise covariance matrix 2x2 for xhat
+        self.Q = np.eye(2) * 0.5
         
         # Gyroscope noise covariance matrix 3x3
-        self.Q_gyro = np.eye(3) * SENSOR.gyro_sigma**2 * 100000
+        self.Q_gyro = np.eye(3) * SENSOR.gyro_sigma**2
         
         # Accelerometer noise covariance matrix 3x3
-        self.R_accel = np.eye(3) * SENSOR.accel_sigma**2 * 100000
+        self.R_accel = np.eye(3) * SENSOR.accel_sigma**2
         
         self.N = 10  # number of prediction step per sample
         
@@ -119,7 +123,8 @@ class EkfAttitude:
         self.P = np.eye(2)
         
         # put a limit on y - h for acceleromteres in EKFAttitude=[phi, theta]
-        self.gate_threshold = 1.0
+        # continuous chi-squared probability distribution
+        self.accel_threshold = stats.chi2.isf(q=0.99, df=3)
 
     def update(self, measurement, state):
         self.propagate_model(measurement, state)
@@ -140,13 +145,13 @@ class EkfAttitude:
         # state variables 3x1
         u = np.array([[state.p, state.q, state.r]]).T
         
-        # xdot = f(x, u) matrxi 2x1
+        # xdot=[phi_dot, theta_dot] = f(x, u) matrix 2x1
         f_ = G @ u
                 
         return f_ 
  
     def h(self, xhat, measurement, state):
-        # measurement model y=h(xhat, u) matrix 3x1
+        # accelerometer measurement model y=h(xhat, u) matrix 3x1
         # where h=[accel_x, accel_y, accel_z].T 
         phi = xhat.item(0)
         theta = xhat.item(1)
@@ -164,7 +169,7 @@ class EkfAttitude:
         for i in range(0, self.N):
             # propagate model
             f_ = self.f(self.xhat, measurement, state)
-            self.xhat += self.Ts * f_
+            self.xhat += self.Ts * f_        # matrix 2×1
             
             # compute Jacobian
             A = jacobian(self.f, self.xhat, measurement, state)
@@ -172,7 +177,7 @@ class EkfAttitude:
             phi = self.xhat.item(0)
             theta = self.xhat.item(1)
 
-            # convert continuous state matrix A to discrete time models
+            # convert continuous state matrix A to discrete time models using Euler series Expansion for exp(A*Ts)
             A_d = np.eye(2) + A * self.Ts + (A @ A) * (self.Ts**2.0) / 2.0
             
             # continuous transition noise matrix G matrix for gyro noise
@@ -196,10 +201,12 @@ class EkfAttitude:
         y = np.array([[measurement.accel_x, measurement.accel_y, measurement.accel_z]]).T
         
         S_inv = np.linalg.inv(C @ self.P @ C.T + self.R_accel)  # matrix 3x1
-        
-        if (y - h).T @ S_inv @ (y - h) < self.gate_threshold:
+
+        # Estimation_Error = (y - h)
+        if (y - h).T @ S_inv @ (y - h) < self.accel_threshold:
             L = self.P @ C.T @ S_inv
-            self.P = (np.eye(2) - L @ C) @ self.P               # matrix 2x2
+            # update P matrix 2x2 Based on New Version of BOOK
+            self.P = (np.eye(2) - L @ C) @ self.P @ (np.eye(2) - L @ C).T + L @ self.R_accel @ L.T
             self.xhat += L @ (y - h)                            # matrix 2x1
         
 ########################## Psition Estimation Using EKF ##########################
@@ -208,9 +215,8 @@ class EkfPosition:
     # xhat=[pn, pe, Vg, chi, wn, we, psi] given state=[Va, q, r, phi, theta]
 
     def __init__(self):
-
         # Process noise covariance matrix 7x7 for xhat
-        self.Q = np.eye(7) * 1e-3
+        self.Q = np.eye(7) * 0.5
         
         # Sensor noise covariance matrix 4x4 for gps 
         self.R_gps = np.diag([
@@ -218,26 +224,29 @@ class EkfPosition:
                     SENSOR.gps_e_sigma**2,      # y_gps_e
                     SENSOR.gps_Vg_sigma**2,     # y_gps_Vg
                     SENSOR.gps_course_sigma**2, # y_gps_course
-                    ]) * 1000
+                    ])
 
         # pseudo measurement covariance matrix 2x2
-        self.R_pseudo = np.eye(2) * 1e-10
+        self.R_pseudo = np.eye(2) * 1e-3
         
         self.N = 10  # number of prediction step per sample
                 
         # Sampling time
         self.Ts = SIM.ts_control / self.N
 
+        # initial state estimate xhat matrix 7x1
         self.xhat = np.array([[0.0], [0.0], [25.0], [0.0], [0.0], [0.0], [0.0]])
         
-        self.P = np.eye(7) * 1e-3       # matrix 7x7 or * 1e-10 
+        # initial estimate covariance matrix 7x7
+        self.P = np.zeros(7)
 
         self.gps_n_old = 9999
         self.gps_e_old = 9999 
         self.gps_Vg_old = 9999
         self.gps_course_old = 9999
-        
-        self.pseudo_threshold = 1.0
+
+        # continuous chi-squared probability distribution
+        self.pseudo_threshold = stats.chi2.isf(q=0.99, df=2)
         self.gps_threshold = 100000     # don't gate GPS
         
     def update(self, measurement, state):
@@ -259,14 +268,15 @@ class EkfPosition:
         wn = xhat.item(4)
         we = xhat.item(5)
         psi = xhat.item(6)
-
+        
+        # psi_dot, Vg_dot Calculation
         psi_dot = (state.q * np.sin(state.phi) / np.cos(state.theta) + 
                   state.r * np.cos(state.phi) / np.cos(state.theta))
         
         Vg_dot = ((state.Va * np.cos(state.psi) + wn) * (-state.Va * psi_dot * np.sin(state.psi)) + 
                   (state.Va * np.sin(state.psi) + we) * (+state.Va * psi_dot * np.cos(state.psi))) / Vg             
         
-        # xdot = f(x, u)
+        # xdot = f(x, u) matrix 7×1
         f_ = np.array([[Vg * np.cos(chi)],
                        [Vg * np.sin(chi)],
                        [Vg_dot],
@@ -278,12 +288,13 @@ class EkfPosition:
         return f_
 
     def h_gps(self, xhat, measurement, state):
-        # measurement model for gps measurements [pn, pe, Vg, chi]
+        # gps measurement model y=h(xhat, u) matrix 4×1
+        # where y_gps = [gps_n, gps_e, gps_Vg, gps_course]
         h_ = xhat[0:4, :]               
         return h_
    
     def h_pseudo(self, xhat, measurement, state):
-        # pseudo measurement model for wind triangale pseudo measurement (p. 161) must be ZERo !
+        # pseudo measurement model for wind triangale pseudo measurement y wind matrxi 2×1
 
         Vg = xhat.item(2)
         chi = xhat.item(3)
@@ -307,50 +318,55 @@ class EkfPosition:
             # compute Jacobian 
             A = jacobian(self.f, self.xhat, measurement, state)
              
-            # convert to discrete time models 
+            # convert continuous state matrix A to discrete time models using Euler series Expansion for exp(A*Ts)
             A_d = np.eye(7) + A * self.Ts + (A @ A * self.Ts**2.0) / 2.0
              
-            # update P with discrete time model                     
+            # update P with discrete time model matrix 7×7                     
             self.P = A_d @ self.P @ A_d.T + self.Q * self.Ts**2.0
             
             # # continuous-discrete propagation matrix 7x7
             # self.P = self.P + self.Ts * (A @ self.P + self.P @ A.T + self.Q)
             
     def measurement_update(self, measurement, state):
-        # always update based on wind triangle pseudo measurement
-        h = self.h_pseudo(self.xhat, measurement, state)
-        C = jacobian(self.h_pseudo, self.xhat, measurement, state)
-        y = np.array([[0, 0]]).T
+        # always update based on wind triangle pseudo measurement   y_wind
+        h = self.h_pseudo(self.xhat, measurement, state)            # matrix 2×1
+        C = jacobian(self.h_pseudo, self.xhat, measurement, state)  # matrox 2×7
+        y = np.array([[0, 0]]).T                                    # matrix 2×2
         
-        S_inv = np.linalg.inv(C @ self.P @ C.T + self.R_pseudo) # matrix 2×2
+        S_inv = np.linalg.inv(C @ self.P @ C.T + self.R_pseudo)     # matrix 2×2
         
+        # Estimation_Error = (y - h)
         if (y - h).T @ S_inv @ (y - h) < self.pseudo_threshold:
-            L = self.P @ C.T @ S_inv
-            self.P = (np.eye(7) - L @ C) @ self.P               # matrix 7×7
-            self.xhat += L @ (y - h)                            # matrix 7×1
+            L = self.P @ C.T @ S_inv                                # matrix 7×2
+            # update P matrix 7x7 Based on New Version of BOOK
+            self.P = (np.eye(7) - L @ C) @ self.P @ (np.eye(7) - L @ C).T + L @ self.R_pseudo @ L.T
+            self.xhat += L @ (y - h)                                # matrix 7×1
             
-        # only update GPS when one of the signals changes
+        # only update GPS when one of the signals changes y_gps
         if (measurement.gps_n != self.gps_n_old) \
             or (measurement.gps_e != self.gps_e_old) \
             or (measurement.gps_Vg != self.gps_Vg_old) \
             or (measurement.gps_course != self.gps_course_old):
 
-            h = self.h_gps(self.xhat, measurement, state)
-            C = jacobian(self.h_gps, self.xhat, measurement, state)
+            h = self.h_gps(self.xhat, measurement, state)           # matrix 4×1
+            C = jacobian(self.h_gps, self.xhat, measurement, state) # matrix 4×7
             
             # modifying chi ∈ [-𝜋, +𝜋]
-            y_chi = wrap(measurement.gps_course, h[3, 0])
+            y_chi = wrap(measurement.gps_course, h[3, 0])           # scaler
             
-            # Update y
+            # Update y_gps
             y = np.array([[measurement.gps_n,
                            measurement.gps_e,
                            measurement.gps_Vg,
-                           y_chi]]).T
+                           y_chi]]).T                               # matrix 4×1
             
             S_inv = np.linalg.inv(C @ self.P @ C.T + self.R_gps)    # matrix 4×4
-            if (y - h).T @ S_inv @ (y - h) < self.gps_threshold:
-                L = self.P @ C.T @ S_inv
-                self.P = (np.eye(7) - L @ C) @ self.P               # matrix 7×7
+            
+            # Estimation_Error = (y - h)
+            if (y - h).T @ S_inv @ (y - h) < self.gps_threshold:    
+                L = self.P @ C.T @ S_inv                            # matrix 7×4
+                # update P matrix 7x7 Based on New Version of BOOK
+                self.P = (np.eye(7) - L @ C) @ self.P @ (np.eye(7) - L @ C).T + L @ self.R_gps @ L.T
                 self.xhat += L @ (y - h)                            # matrix 7×1
                 
             # update stored GPS signals
